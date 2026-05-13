@@ -1,0 +1,31 @@
+{
+	"compilerOptions": {
+		"tsBuildInfoFile": "./node_modules/.tmp/tsconfig.server.tsbuildinfo",
+		"target": "esnext",
+		"useDefineForClassFields": true,
+		"rootDir": ".",
+		"outDir": "./dist",
+		"lib": [
+			"ESNext"
+		],
+		"module": "nodenext",
+		"types": [
+			"vite/client"
+		],
+		"skipLibCheck": true,
+		"allowImportingTsExtensions": false,
+		"verbatimModuleSyntax": true,
+		"moduleDetection": "force",
+		"noEmit": false,
+		"moduleResolution": "nodenext",
+		"experimentalDecorators": true
+	},
+	"include": [
+		"server",
+		"shared"
+	],
+	"exclude": [
+		"./src"
+	],
+	"extends": "@tsconfig/strictest/tsconfig.json"
+}

@@ -1,0 +1,13 @@
+#login-panel {
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 350ms;
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	&.show {
+		pointer-events: all;
+		opacity: 1;
+	}
+}

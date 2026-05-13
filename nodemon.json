@@ -1,0 +1,9 @@
+{
+	"watch": [
+		"dist/**/*.json",
+		"dist/**/*.js"
+	],
+	"exec": "node --trace-uncaught .",
+	"ext": "js jsx json ts tsx",
+	"delay": 150
+}
