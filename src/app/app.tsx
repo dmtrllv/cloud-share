@@ -1,42 +1,15 @@
-import { useRef, useState } from "react";
-import { useAuth } from "../context/auth";
+import { Navbar } from "../components";
+import { Storage } from "../components/storage";
+import { LoginPanel } from "../panels";
 
 import "./styles/app.scss";
 
 export const App = () => {
-	const { isAuthenticated, logout } = useAuth();
-
 	return (
-		<div>
+		<>
+			<Navbar />
+			<Storage path="/" />
 			<LoginPanel />
-			{isAuthenticated ? <button onClick={logout}>Logout</button> : null}
-		</div>
+		</>
 	);
 };
-
-export const LoginPanel = () => {
-	const { isAuthenticated, login } = useAuth();
-
-	const isLoading = useRef(false);
-	const [username, setUsername] = useState("");
-	const [password, setPassword] = useState("");
-
-	const tryLogin = async () => {
-		if (isLoading.current) {
-			return;
-		}
-
-		isLoading.current = true;
-		await login(username, password);
-		isLoading.current = false;
-	};
-
-	return (
-		<div id="login-panel" className={` ${!isAuthenticated ? "show" : ""}`}>
-			<h1>Login</h1>
-			<input type="text" placeholder="username" value={username} onChange={e => setUsername(e.target.value)} />
-			<input type="password" placeholder="password" value={password} onChange={e => setPassword(e.target.value)} />
-			<button onClick={tryLogin}>Login</button>
-		</div>
-	);
-}

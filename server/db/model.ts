@@ -113,7 +113,7 @@ export abstract class Model {
 		if (query.where) {
 			q += ` WHERE ${this.parseWhere(query.where, values)}`;
 		}
-		console.log(q);
+		console.log(q, values);
 		const result = await Database.get().pool.query(q, values);
 		return result.rows.map((row) => Model.fromRow(this, row)) as any;
 	}
@@ -187,9 +187,13 @@ export abstract class Model {
 			const v = _data[key];
 			if (refKeys.includes(key.toString())) {
 				if (v !== null) {
-					const Class = (v as any).constructor as typeof Model;
-					const idKey = Class.getPrimaryKey();
-					return `$${values.push(v![idKey as keyof typeof v])}`;
+					if(typeof v === "number") {
+						return `$${values.push(v)}`;
+					} else {
+						const Class = (v as any).constructor as typeof Model;
+						const idKey = Class.getPrimaryKey();
+						return `$${values.push(v![idKey as keyof typeof v])}`;
+					}
 				} else {
 					return `$${values.push(null)}`;
 				}
@@ -199,7 +203,7 @@ export abstract class Model {
 		});
 
 		let q = `INSERT INTO ${tableName} (${keys.join(", ")}) VALUES (${placeholders.join(",")}) RETURNING *`;
-		console.log(q);
+		console.log(q, values);
 		const result = await Database.get().pool.query(q, values);
 
 		return Model.fromRow(this, result.rows[0]);
@@ -243,7 +247,8 @@ type NewKeys<T extends Model> = Exclude<ColumnKeys<T> | RefKeys<T>, IDKeys<T>>;
 
 export type NewProps<T extends Model> = {
 	[K in NewKeys<T>]:
-	NonNullable<T[K]> extends Ref<infer U extends Model | [Model] | null> ? (null extends T[K] ? U | null : U) :
+	NonNullable<T[K]> extends Ref<infer U extends Model> ? (null extends T[K] ? U | null : U) | ID<U> :
+	NonNullable<T[K]> extends Ref<infer _ extends [infer U extends Model]> ? (null extends T[K] ? U | null : U) | ID<U> :
 	NonNullable<T[K]> extends string | number | boolean | Date ? T[K] :
 	never;
 };
@@ -255,7 +260,7 @@ type ColumnKeys<T extends Model> = {
 }[keyof T];
 
 type RefKeys<T extends Model> = {
-	[K in keyof T]: NonNullable<T[K]> extends Ref<Model> | Ref<Model>[] ? K : never;
+	[K in keyof T]: NonNullable<T[K]> extends Ref<Model> | Ref<[Model]> ? K : never;
 }[keyof T];
 
 type What<T extends Model> = ColumnKeys<T> | ColumnKeys<T>[] | "*";
@@ -286,17 +291,19 @@ type WhereOp<T> =
 	T extends boolean ? boolean :
 	never;
 
-type RefModelType<T extends Model, K extends keyof T> = T[K] extends Ref<infer U> ?
-	(U extends Model ? U : U extends [infer V extends Model] ? V : never) :
+type RefModelType<T extends Model, K extends keyof T> =
+	NonNullable<T[K]> extends Ref<infer U extends Model> ? U :
+	NonNullable<T[K]> extends Ref<infer _ extends [infer U extends Model]> ? U :
 	never;
 
-type RefWhereOp<T extends Model, K extends keyof T> = RefModelType<T, K> | ID<RefModelType<T, K>> | {
-	"<"?: ID<RefModelType<T, K>> | RefModelType<T, K>;
-	">"?: ID<RefModelType<T, K>> | RefModelType<T, K>;
-	"<="?: ID<RefModelType<T, K>> | RefModelType<T, K>;
-	">="?: ID<RefModelType<T, K>> | RefModelType<T, K>;
-	"!="?: ID<RefModelType<T, K>> | RefModelType<T, K>;
-};
+type RefWhereOp<T extends Model, K extends keyof T> =
+	RefModelType<T, K> | ID<RefModelType<T, K>> | {
+		"<"?: ID<RefModelType<T, K>> | RefModelType<T, K>;
+		">"?: ID<RefModelType<T, K>> | RefModelType<T, K>;
+		"<="?: ID<RefModelType<T, K>> | RefModelType<T, K>;
+		">="?: ID<RefModelType<T, K>> | RefModelType<T, K>;
+		"!="?: ID<RefModelType<T, K>> | RefModelType<T, K>;
+	};
 
 type SelectedKeys<T extends Model, Q extends FindQuery<T>> =
 	undefined extends Q["what"] ? WhereKeys<T> :
@@ -311,7 +318,12 @@ type IncludedKeys<T extends Model, Q extends FindQuery<T>> =
 	keyof Q["include"] extends keyof T ? keyof Q["include"] :
 	never;
 
-export type FindResult<T extends Model, Q extends FindQuery<T>> = Pick<T, SelectedKeys<T, Q>> & Pick<T, IncludedKeys<T, Q>>;
+type ExcludedColumnKeys<T extends Model, Q extends FindQuery<T>> = Exclude<ColumnKeys<T>, SelectedKeys<T, Q>>;
+type ExcludedIncludeKeys<T extends Model, Q extends FindQuery<T>> = Exclude<keyof Include<T>, IncludedKeys<T, Q>>;
+
+type ExcludedKeys<T extends Model, Q extends FindQuery<T>> = ExcludedColumnKeys<T, Q> | ExcludedIncludeKeys<T, Q>;
+
+export type FindResult<T extends Model, Q extends FindQuery<T>> = Omit<T, ExcludedKeys<T, Q>>;
 
 export type ColumnOptions = {
 	unique?: boolean;

@@ -10,5 +10,4 @@ export class User extends Model {
 
 	@col("varchar(255)")
 	public password!: string;
-
 }	

@@ -1,4 +1,5 @@
 import path from "node:path";
+import posixPath from "node:path/posix";
 import { mkdir } from "node:fs/promises";
 import type { User } from "../models/user.js";
 import { Service } from "./service.js";
@@ -17,23 +18,37 @@ export class StorageService extends Service {
 	}
 
 	public async initStorage(owner: User) {
-		const relativePath = owner.id.toString();
-		const absolutePath = path.resolve(this.storageRoot, relativePath);
-
+		const absolutePath = path.resolve(this.storageRoot, owner.id.toString());
+		console.log("init storage", absolutePath);
 		if (!existsSync(absolutePath)) {
 			await mkdir(absolutePath, { recursive: true });
-			await FsEntry.insert({ parent: null, path: relativePath, owner, isFile: false });
+			await FsEntry.insert({ parent: null, path: "/", owner, isFile: false });
 		}
 	}
 
-	public async addSubDirectory(owner: User, parent: FsEntry, name: string) {
-		const relativePath = path.join(parent.path, name);
-		const absolutePath = path.resolve(this.storageRoot, relativePath);
+	public async getEntry(owner: User, entryPath: string): Promise<FsEntry | null> {
+		console.log("get entry path", posixPath.normalize(entryPath));
+		return FsEntry.findOne({ where: { path: posixPath.normalize(entryPath), owner: owner.id }, include: true });
+	}
 
-		if (!existsSync(absolutePath)) {
-			await mkdir(absolutePath, { recursive: true });
-			await FsEntry.insert({ parent: null, path: relativePath, owner, isFile: false });
+	// TODO: handle recursive creation (fs and database)
+	public async addSubDirectory(owner: User, dir: string) {
+		dir = posixPath.normalize(dir);
+		const absolutePath = path.resolve(this.storageRoot, owner.id.toString(), "./" + dir);
+
+		if (existsSync(absolutePath)) {
+			throw new Error(`${dir} already exists!`);
 		}
+
+		await mkdir(absolutePath, { recursive: true });
+		const parent = await FsEntry.findOne({ what: ["id"], where: { path: posixPath.dirname(dir) } });
+
+		if (!parent) {
+			throw new Error(`Could not get parent entry for ${dir}!`);
+		}
+
+		console.log("addSubDirectory", { dir, parent });
+		return await FsEntry.insert({ parent: parent.id, path: dir, owner, isFile: false });
 	}
 
 	// i think this must be blocking to prevent having requests coming in?

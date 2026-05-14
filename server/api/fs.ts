@@ -1,26 +1,49 @@
 import { Router } from "express";
-import { isAuthorized } from "../middleware/authorized.js";
-import { FsEntry } from "../models/entry.js";
+import { isAuthenticated } from "../middleware/authenticated.js";
 import { User } from "../models/user.js";
 import { StorageService } from "../services/storage.js";
-import path from "node:path";
+import { FsEntry } from "../models/entry.js";
 
 export const fs = Router({ strict: true });
 
-fs.get("{*splat}", isAuthorized, async (req, res) => {
-	const owner = User.id(req.session.userId!);
-	const p = path.resolve(path.join(StorageService.get().storageRoot, owner.toString(), req.url));
+fs.get("{*splat}", isAuthenticated, async (req, res) => {
+	const owner = await User.findOne({ where: { id: req.session.userId! } });
 
-	console.log(p);
-	const entry = await FsEntry.findOne({ where: { owner, path: p } });
+	if (!owner)
+		return res.json({ error: "Could not get user info!" });
+
+	const entry = await StorageService.get().getEntry(owner, req.url);
 
 	if (!entry) {
-		return res.json({ error: "?" });
+		return res.json({ error: "Could not find entry!" });
 	}
 
 	if (entry.isFile) {
-		return res.json({ data: "file" });
+		return res.json({ data: entry });
 	}
 
-	return res.json({ data: await FsEntry.find({ where: { owner, parent: entry as any } }) });
+	return res.json({
+		data: {
+			entry,
+			children: await FsEntry.find({ where: { owner, parent: entry } })
+		}
+	});
+});
+
+fs.post("{*splat}", isAuthenticated, async (req, res) => {
+	const owner = await User.findOne({ where: { id: req.session.userId! } });
+	if (!owner)
+		return res.json({ error: "Could not get user info!" });
+	console.log("create path", req.url, " for owner", owner.id);
+
+	if (req.body.isFile) {
+		return res.json({ error: "TODO" })
+	}
+
+	try {
+		return res.json({ data: await StorageService.get().addSubDirectory(owner, req.url) });
+	} catch (e) {
+		console.log(e);
+		return res.json({ error: e });
+	}
 });
