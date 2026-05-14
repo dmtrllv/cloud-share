@@ -65,4 +65,4 @@ export const WithAuth = ({ children }: PropsWithChildren) => {
 		return null;
 
 	return children;
-}
+};

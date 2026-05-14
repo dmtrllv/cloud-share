@@ -11,8 +11,8 @@
 	#app {
 		width: 100%;
 		flex: 1 1 auto;
-		overflow-x: hidden;
-		overflow-y: auto;
-		padding: 35px;
+		overflow: hidden;
+		display: flex;
+		flex-direction: row;
 	}
 }

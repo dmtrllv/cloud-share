@@ -1,4 +1,3 @@
-//import postgres from "postgres";
 import type { PoolConfig } from "pg";
 import pg from "pg";
 import type { Model } from "./model.js";

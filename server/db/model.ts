@@ -23,7 +23,6 @@ export abstract class Model {
 		this.columns[name] = meta;
 	}
 
-	// @ts-ignore
 	public static getPrimaryKey<T extends typeof Model>(this: T): string | null {
 		return Object.keys(this.columns || {}).find(k => this.columns![k]!.primaryKey) || null;
 	}

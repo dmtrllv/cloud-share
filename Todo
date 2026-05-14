@@ -1,0 +1,8 @@
+Features:
+	☐ Uploading/managing files
+	☐ Folder managerment (copy, move, delete, rename) 
+		☐ how to update fs_entries when a folder name changes?
+		☐ 1. only store the fs_entry.name and retreive the full path by iterating parent entries?
+		☐ 2. update all child entries names -> more work?
+	☐ Desktop app for syncing to local fs
+	☐ Sharing folders between accounts (RW permission)
