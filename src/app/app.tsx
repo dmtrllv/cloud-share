@@ -12,6 +12,7 @@ export const App = () => {
 			<div id="app">
 				<WithAuth>
 					<Storage path="/" />
+					<Storage path="/" />
 				</WithAuth>
 			</div>
 			<LoginPanel />

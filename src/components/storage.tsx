@@ -112,7 +112,7 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 				</div>
 				<div className="entries">
 					{entries.length === 0 ? <div>Nothing here yet!</div> : null}
-					{entries.map(e => <div className="entry" onClick={() => openEntry(e.path)} key={e.path}>{e.path.split("/").pop()}</div>)}
+					{entries.map(e => <div className="entry" onClick={() => openEntry(e.path)} key={e.path}>&#x1F5C0; {e.path.split("/").pop()}</div>)}
 					{state.error && <h1>Error: {state.error}</h1>}
 				</div>
 				<form onSubmit={e => { e.preventDefault(); e.stopPropagation(); addFolder(); }} className={`add-folder-panel ${addFolderState.show ? "show" : ""}`} onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
