@@ -18,7 +18,6 @@ auth.get("/login", async (req, res) => {
 });
 
 auth.post("/login", validate(), async (req, res) => {
-	console.log("/login")
 	try {
 		const ok = await AccountService.get().login(req.body.username, req.body.password);
 		if (ok) {

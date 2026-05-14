@@ -19,7 +19,6 @@ export class StorageService extends Service {
 
 	public async initStorage(owner: User) {
 		const absolutePath = path.resolve(this.storageRoot, owner.id.toString());
-		console.log("init storage", absolutePath);
 		if (!existsSync(absolutePath)) {
 			await mkdir(absolutePath, { recursive: true });
 			await FsEntry.insert({ parent: null, path: "/", owner, isFile: false });
@@ -27,7 +26,6 @@ export class StorageService extends Service {
 	}
 
 	public async getEntry(owner: User, entryPath: string): Promise<FsEntry | null> {
-		console.log("get entry path", posixPath.normalize(entryPath));
 		return FsEntry.findOne({ where: { path: posixPath.normalize(entryPath), owner: owner.id }, include: true });
 	}
 
@@ -47,7 +45,6 @@ export class StorageService extends Service {
 			throw new Error(`Could not get parent entry for ${dir}!`);
 		}
 
-		console.log("addSubDirectory", { dir, parent });
 		return await FsEntry.insert({ parent: parent.id, path: dir, owner, isFile: false });
 	}
 

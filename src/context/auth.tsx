@@ -56,3 +56,13 @@ export const AuthProvider = ({ children, state = { isAuthenticated: false } }: P
 		</Context.Provider>
 	);
 };
+
+
+export const WithAuth = ({ children }: PropsWithChildren) => {
+	const { isAuthenticated } = useAuth();
+
+	if(!isAuthenticated)
+		return null;
+
+	return children;
+}

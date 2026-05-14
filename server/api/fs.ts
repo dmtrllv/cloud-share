@@ -34,7 +34,6 @@ fs.post("{*splat}", isAuthenticated, async (req, res) => {
 	const owner = await User.findOne({ where: { id: req.session.userId! } });
 	if (!owner)
 		return res.json({ error: "Could not get user info!" });
-	console.log("create path", req.url, " for owner", owner.id);
 
 	if (req.body.isFile) {
 		return res.json({ error: "TODO" })
@@ -44,6 +43,7 @@ fs.post("{*splat}", isAuthenticated, async (req, res) => {
 		return res.json({ data: await StorageService.get().addSubDirectory(owner, req.url) });
 	} catch (e) {
 		console.log(e);
-		return res.json({ error: e });
+		const error = e instanceof Error ? e.message : e;
+		return res.json({ error });
 	}
 });
