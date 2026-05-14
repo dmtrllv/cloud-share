@@ -1,13 +1,18 @@
-#login-panel {
-	opacity: 0;
-	pointer-events: none;
-	transition: opacity 350ms;
-	position: absolute;
-	left: 50%;
-	top: 50%;
-	transform: translate(-50%, -50%);
-	&.show {
-		pointer-events: all;
-		opacity: 1;
+#root {
+	background-image: url("https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D");
+	background-image: url("https://images.unsplash.com/photo-1655998233171-ee5b130acba5?q=80&w=1998&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D");
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: cover;
+	display: flex;
+	height: 100%;
+	width: 100%;
+	flex-direction: column;
+	#app {
+		width: 100%;
+		flex: 1 1 auto;
+		overflow-x: hidden;
+		overflow-y: auto;
+		padding: 35px;
 	}
 }

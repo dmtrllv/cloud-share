@@ -23,9 +23,11 @@ export const LoginPanel = () => {
 	return (
 		<div id="login-panel" className={` ${!isAuthenticated ? "show" : ""}`}>
 			<h1>Login</h1>
-			<input type="text" placeholder="username" value={username} onChange={e => setUsername(e.target.value)} />
-			<input type="password" placeholder="password" value={password} onChange={e => setPassword(e.target.value)} />
-			<button onClick={tryLogin}>Login</button>
+			<form onSubmit={e => { e.preventDefault(); tryLogin(); }}>
+				<input type="text" placeholder="username" value={username} onChange={e => setUsername(e.target.value)} />
+				<input type="password" placeholder="password" value={password} onChange={e => setPassword(e.target.value)} />
+				<button type="submit" onClick={tryLogin}>Login</button>
+			</form>
 		</div>
 	);
 }

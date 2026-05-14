@@ -6,8 +6,77 @@
 	left: 50%;
 	top: 50%;
 	transform: translate(-50%, -50%);
+	border: 0px;
+	overflow: hidden;
+	padding: 15px;
+	border-radius: 6px;
+	box-shadow: 1px 1px 8px 0px rgba(0, 0, 0, 0.7);
+	background-color: rgba(0, 0, 0, 0.15);
+	backdrop-filter: blur(25px);
+	width: 640px;
+	height: 350px;
+	color: white;
+	text-align: center;
+
 	&.show {
 		pointer-events: all;
 		opacity: 1;
+	}
+
+	form {
+		position: absolute;
+		display: block;
+		left: 50%;
+		top: calc(50% + 37px);
+		transform: translate(-50%, -50%);
+
+		input {
+			position: relative;
+			display: block;
+			margin: 15px 0px;
+			font-size: 18px;
+			background: transparent;
+			border: 0px;
+			border-bottom: 1px solid white;
+			color: white;
+			padding: 2px 23px;
+			opacity: 0.65;
+			outline: none;
+			transition: 150ms;
+
+			&::-webkit-input-placeholder {
+				color: white;
+			}
+			&::-moz-placeholder {
+				color: white;
+			}
+			&:-ms-input-placeholder {
+				color: white;
+			}
+			&:-moz-placeholder {
+				color: white;
+			}
+
+			&:active,
+			&:focus {
+				opacity: 1;
+			}
+		}
+
+		button {
+			background: rgba(0, 0, 0, 0.1);
+			border: 1px solid white;
+			border-radius: 6px;
+			color: white;
+			padding: 12px 48px;
+			margin-top: 35px;
+			font-size: 16px;
+			opacity: 0.65;
+			transition: 150ms;
+
+			&:hover {
+				opacity: 1;
+			}
+		}
 	}
 }

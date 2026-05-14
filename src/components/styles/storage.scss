@@ -1,5 +1,67 @@
 .storage {
 	.dir-view {
-		
+		background-color: rgba(0, 0, 0, 0.65);
+		color: white;
+		padding: 35px;
+		border-radius: 6px;
+		max-width: 640px;
+		position: relative;
+		left: 50%;
+		transform: translateX(-50%);
+		.url {
+			margin-bottom: 5px;
+			border: 1px solid rgba(255, 255, 255, 0.65);
+			padding: 15px;
+			border-radius: 6px;
+			.url-part {
+				margin: 13px 0px;
+				padding: 5px 0px;
+				opacity: 85;
+				background-color: rgba(0, 0, 0, 0);
+				&:hover:not(nth-last-child) {
+					background-color: rgba(0, 0, 0, 0.35);
+					opacity: 1;
+				}
+				.sep {
+					padding: 5px;
+				}
+				display: inline-block;
+				user-select: none;
+			}
+		}
+
+		.entries {
+			padding: 15px;
+
+			.entry {
+				border-bottom: 1px solid white;
+				padding: 5px;
+			}
+		}
+
+		.add-folder-panel {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			transform: translate(-50%, -50%);
+			padding: 35px;
+			background-color: rgba(0, 0, 0, 0.35);
+			border-radius: 6px;
+			backdrop-filter: blur(5px);
+			box-shadow: 1px 1px 8px 0px rgba(0, 0, 0, 0.7);
+			text-align: center;
+			display: none;
+			&.show {
+				display: block;
+			}
+
+			.error {
+				color: white;
+				background-color: #a93f3f;
+				border-radius: 6px;
+				padding: 5px;
+				margin: 5px 5px 13px 5px;
+			}
+		}
 	}
 }

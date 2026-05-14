@@ -9,9 +9,11 @@ export const App = () => {
 	return (
 		<>
 			<Navbar />
-			<WithAuth>
-				<Storage path="/" />
-			</WithAuth>
+			<div id="app">
+				<WithAuth>
+					<Storage path="/" />
+				</WithAuth>
+			</div>
 			<LoginPanel />
 		</>
 	);
