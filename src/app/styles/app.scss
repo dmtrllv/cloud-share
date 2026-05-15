@@ -1,19 +1,48 @@
+:root {
+	--bg-1: rgb(0, 0, 0, 0.25);
+	--bg-2: rgb(0, 0, 0, 0.15);
+	--shadow: 1px 1px 8px 0px rgba(0, 0, 0, 0.7);
+	--shadow-2: 1px 1px 8px 0px rgba(0, 0, 0, 0.25);
+	--fg-1: rgb(236, 236, 236);
+	--fg-2: rgba(236, 236, 236, 0.7);
+}
+
 #root {
 	background-image: url("https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D");
 	background-image: url("https://images.unsplash.com/photo-1655998233171-ee5b130acba5?q=80&w=1998&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D");
 	background-position: center;
 	background-repeat: no-repeat;
 	background-size: cover;
+	background-attachment: fixed;
+	position: relative;
 	display: flex;
-	height: 100%;
-	width: 100%;
 	flex-direction: column;
-	#app {
-		width: 100%;
-		flex: 1 1 auto;
-		overflow: hidden;
+	min-height: 100vh;
+	user-select: none;
+
+	.layout-root {
+		flex: 1;
 		display: flex;
 		flex-direction: row;
-		row-gap: -10px;
+		
+	}
+
+	#app-overlay {
+		position: absolute;
+		left: 0;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		opacity: 0;
+		pointer-events: none;
+		width: 100svw;
+		height: 100svh;
+		transition: 650ms;
+		backdrop-filter: blur(100px);
+		background-color: transparent;
+		&.show {
+			pointer-events: default;
+			opacity: 1;
+		}
 	}
 }

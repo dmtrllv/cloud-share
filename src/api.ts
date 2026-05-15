@@ -1,11 +1,15 @@
 import type { ApiResponse } from "../shared/api";
 
+const log = (...args: any[]) => {
+	//console.log(...args);
+};
+
 const createApiHandler = (method: string) => {
 	if (method === "GET") {
 		return <T>(url: string, data: any = {}): Promise<ApiResponse<T>> => {
 			const query = data ? `?${new URLSearchParams(data)}` : ""
 			url = `/api${url}${query}`;
-			console.log(`[${method}]`, url)
+			log(`[${method}]`, url)
 			return fetch(url).then(r => {
 				if (r.status !== 200) {
 					return { error: new Error(r.status.toString()) }
@@ -19,7 +23,7 @@ const createApiHandler = (method: string) => {
 		};
 	}
 	return <T>(url: string, data: any = {}): Promise<ApiResponse<T>> => {
-		console.log(`[${method}]`, `/api${url}`, data);
+		log(`[${method}]`, `/api${url}`, data);
 		return fetch("/api" + url, { body: data ? JSON.stringify(data) : "", method: method, headers: { "Content-Type": "application/json" } }).then(r => {
 			if (r.status !== 200) {
 				return { error: new Error(r.status.toString()) }

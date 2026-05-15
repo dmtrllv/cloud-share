@@ -1,27 +1,17 @@
 import { useEffect, useRef, useState } from "react"
-import { api } from "../api";
+import { api } from "../../api";
+import { PathBar } from "./path-bar";
+import { storageEvents, type MakeDirEvent } from "./events";
 
 import "./styles/storage.scss";
-
-const rootPart = { name: "/", path: "/" };
-
-const parsePathPaths = (path: string) => {
-	if (path === "/") {
-		return [rootPart];
-	}
-	let prev = ""
-	return [rootPart, ...path.substring(1).split("/").map(p => {
-		let path = `${prev}/${p}`;
-		prev = path;
-		return { name: p, path };
-	})];
-};
 
 export const Storage = ({ path = "/" }: { path?: string }) => {
 	const reqId = useRef(0);
 	const [entries, setEntries] = useState<Entry[]>([]);
 	const [state, setState] = useState<StorageState>({ requestingPath: path, viewingPath: null });
 	const [addFolderState, setAddFolderState] = useState<AddFolderState>({ show: false, name: "" });
+
+	const currentPath = state.requestingPath || state.viewingPath || "/";
 
 	const nextId = () => {
 		reqId.current += 1;
@@ -30,8 +20,7 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 
 	const addFolderInputRef = useRef<HTMLInputElement>(null);
 
-	const openEntry = (path: string) => {
-		console.log("open entry", path);
+	const openPath = (path: string) => {
 		const id = nextId();
 		api.get<{ children: Entry[] }>(`/fs${path}`).then((res) => {
 			if (id !== reqId.current)
@@ -51,23 +40,6 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 		});
 	};
 
-	useEffect(() => {
-		openEntry(path);
-	}, [path]);
-
-	useEffect(() => {
-		const handler = () => {
-			if (addFolderState.show)
-				setAddFolderState({ show: false, name: "" });
-		};
-		window.addEventListener("click", handler);
-
-		return () => {
-			window.removeEventListener("click", handler);
-		};
-	}, [addFolderState]);
-
-	const currentPath = state.requestingPath || state.viewingPath || "/";
 
 	const addFolder = async () => {
 		const name = addFolderState.name;
@@ -75,8 +47,8 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 			const parentPath = currentPath === "/" ? "" : currentPath;
 			api.post<Entry>(`/fs${parentPath}/${name}`).then(({ data, error }) => {
 				if (data) {
-					setEntries([...entries, data]);
 					setAddFolderState({ show: false, name: "" });
+					storageEvents.emit("mkdir", { parentPath: currentPath, newDirName: name });
 				} else {
 					setAddFolderState({ ...addFolderState, error });
 				}
@@ -84,43 +56,87 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 		}
 	};
 
-	const addFolderClick = (e: React.MouseEvent) => {
+	const onNewFolder = (e: React.MouseEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
 		setAddFolderState({ show: !addFolderState.show, name: "" });
 	};
 
+	const onNewFolderSubmit = (e: React.SubmitEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		addFolder();
+	};
+
 	useEffect(() => {
+		openPath(path);
+	}, [path]);
+
+	useEffect(() => {
+		const handler = () => {
+			if (addFolderState.show)
+				setAddFolderState({ show: false, name: "" });
+		};
+
+		window.addEventListener("click", handler);
+
 		if (addFolderState.show && addFolderInputRef.current !== null) {
 			addFolderInputRef.current.focus();
 		}
+
+		return () => {
+			window.removeEventListener("click", handler);
+		};
 	}, [addFolderState]);
 
-	const parts = parsePathPaths(state.viewingPath || "/");
-	console.log(parts);
+	useEffect(() => {
+		const handler = (e: MakeDirEvent) => {
+			if (e.parentPath === currentPath) {
+				setEntries((entries) => {
+					const parentPath = currentPath === "/" ? "" : currentPath;
+					const f = entries.find(u => u.path === `${parentPath}/${e.newDirName}`);
+					if (f)
+						return entries;
+					return [...entries, { isFile: false, path: `${currentPath}/${e.newDirName}` }]
+				});
+			}
+		};
+		storageEvents.on("mkdir", handler);
+		return () => { storageEvents.remove("mkdir", handler) };
+	}, [currentPath]);
+
 	return (
 		<div className="storage">
 			<div className="dir-view">
-				<div className="url">
-					{parts.map((part, i) => (
-						<div key={i} className="url-part" onClick={() => openEntry(part.path)}>
-							{i !== 1 && <span className="sep">/</span>}
-							{i !== 0 ? part.name : ""}
-						</div>
-					))}
-					<button style={{ float: "right" }} onClick={addFolderClick}>Add Folder</button>
+				<div className="top-buttons">
+					<div className="close" ><span>&#10006;</span></div>
 				</div>
+				<PathBar openPath={openPath} path={state.viewingPath || "/"} onNewFolder={onNewFolder} />
 				<div className="entries">
 					{entries.length === 0 ? <div>Nothing here yet!</div> : null}
-					{entries.map(e => <div className="entry" onClick={() => openEntry(e.path)} key={e.path}>&#x1F5C0; {e.path.split("/").pop()}</div>)}
+					{entries.map(e => <EntryView key={e.path} openPath={openPath} {...e} />)}
 					{state.error && <h1>Error: {state.error}</h1>}
 				</div>
-				<form onSubmit={e => { e.preventDefault(); e.stopPropagation(); addFolder(); }} className={`add-folder-panel ${addFolderState.show ? "show" : ""}`} onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
+				<form onSubmit={onNewFolderSubmit} className={`add-folder-panel ${addFolderState.show ? "show" : ""}`} onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
 					<input ref={addFolderInputRef} type="text" placeholder="folder name" value={addFolderState.name} onChange={e => setAddFolderState({ ...addFolderState, name: e.target.value })} />
 					{addFolderState.error && <div className="error">Error: {addFolderState.error}</div>}
 					<button onClick={addFolder}>add</button>
 				</form>
 			</div>
+		</div>
+	);
+};
+
+const EntryView = ({ openPath, path }: { openPath: (path: string) => void; path: string; isFile: boolean }) => {
+	const onContextMenu = (e: React.MouseEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		console.log(e);
+	};
+	
+	return (
+		<div className="entry" onClick={() => openPath(path)} onContextMenu={onContextMenu}>
+			&#x1F5C0; {path.split("/").pop()}
 		</div>
 	);
 };

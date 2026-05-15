@@ -15,7 +15,7 @@
 	backdrop-filter: blur(25px);
 	width: 640px;
 	height: 350px;
-	color: white;
+	color: var(--fg-1);
 	text-align: center;
 
 	&.show {
@@ -42,23 +42,23 @@
 			background: transparent;
 			border: 0px;
 			border-bottom: 1px solid white;
-			color: white;
+			color: var(--fg-1);
 			padding: 2px 23px;
 			opacity: 0.65;
 			outline: none;
 			transition: 150ms;
 
 			&::-webkit-input-placeholder {
-				color: white;
+				color: var(--fg-1);
 			}
 			&::-moz-placeholder {
-				color: white;
+				color: var(--fg-1);
 			}
 			&:-ms-input-placeholder {
-				color: white;
+				color: var(--fg-1);
 			}
 			&:-moz-placeholder {
-				color: white;
+				color: var(--fg-1);
 			}
 
 			&:active,
@@ -71,7 +71,7 @@
 			background: rgba(0, 0, 0, 0.1);
 			border: 1px solid white;
 			border-radius: 6px;
-			color: white;
+			color: var(--fg-1);
 			padding: 12px 48px;
 			margin-top: 35px;
 			font-size: 16px;

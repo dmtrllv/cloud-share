@@ -1,0 +1,52 @@
+.path-bar {
+	position: relative;
+	padding: 5px;
+	border: 1px solid var(--bg-1);
+	border-radius: 6px;
+	background-color: var(--bg-2);
+	box-shadow: var(--shadow-2);
+
+	.part {
+		cursor: pointer;
+		display: inline-block;
+		padding: 4px 12px;
+		position: relative;
+		color: rgb(218, 218, 218);
+
+		&.hover {
+			background-color: var(--bg-2);
+			color: rgb(255, 255, 255);
+			&:not(.hover ~ .hover) {
+				border-top-left-radius: 6px;
+				border-bottom-left-radius: 6px;
+			}
+			&:not(:has(~ .hover)) {
+				border-top-right-radius: 6px;
+				border-bottom-right-radius: 6px;
+			}
+		}
+	}
+
+	.btn-new-folder {
+		position: absolute;
+		right: 5px;
+		top: 50%;
+		transform: translateY(-50%);
+		width: 28px;
+		height: 28px;
+		background: rgba(0, 0, 0, 0.1);
+		border: 1px solid var(--bg-1);
+		border-radius: 6px;
+		color: var(--fg-1);
+		font-size: 16px;
+		opacity: 0.65;
+		transition: 150ms;
+		cursor: pointer;
+		padding: 1px;
+		font-size: 22px;
+		text-align: center;
+		&:hover {
+			opacity: 1;
+		}
+	}
+}

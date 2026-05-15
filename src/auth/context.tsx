@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type PropsWithChildren } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type PropsWithChildren } from "react";
 import { api } from "../api";
 
 export type AuthCtx = AuthCtxState & {
@@ -8,9 +8,11 @@ export type AuthCtx = AuthCtxState & {
 };
 
 export type AuthCtxState = {
+	isLoading: boolean;
 	isAuthenticated: false;
 	username?: never;
 } | {
+	isLoading: false;
 	isAuthenticated: true;
 	username: string;
 };
@@ -24,13 +26,29 @@ export const useAuth = (): AuthCtx => {
 	return ctx;
 };
 
-export const AuthProvider = ({ children, state = { isAuthenticated: false } }: PropsWithChildren<{ state?: AuthCtxState }>) => {
-	const [ctx, setState] = useState<AuthCtxState>(state);
+
+const initAuthState = async (): Promise<AuthCtxState> => {
+	const response = await api.get<{ username: string }>("/auth/login");
+
+	if (response.data) {
+		return { isAuthenticated: true, username: response.data.username, isLoading: false };
+	}
+
+	return { isAuthenticated: false, isLoading: false };
+};
+
+export const AuthProvider = ({ children }: PropsWithChildren) => {
+	const [ctx, setCtx] = useState<AuthCtxState>({ isAuthenticated: false, isLoading: true });
+
+	const state = useRef<AuthCtxState>(ctx);
+	const setState = useRef(setCtx);
+	state.current = ctx;
+	setState.current = setCtx;
 
 	const login = async (username: string, password: string) => {
 		const response = await api.post<boolean>("/auth/login", { username, password });
 		if (response.data) {
-			setState({ isAuthenticated: true, username });
+			setState.current({ isAuthenticated: true, username, isLoading: false });
 			return true;
 		}
 		return false;
@@ -39,7 +57,7 @@ export const AuthProvider = ({ children, state = { isAuthenticated: false } }: P
 	const register = async (username: string, password: string) => {
 		const response = await api.post<boolean>("/auth/register", { username, password });
 		if (response.data) {
-			setState({ isAuthenticated: true, username });
+			setState.current({ isAuthenticated: true, username, isLoading: false });
 			return true;
 		}
 		return false;
@@ -47,8 +65,16 @@ export const AuthProvider = ({ children, state = { isAuthenticated: false } }: P
 
 	const logout = async () => {
 		api.post("/auth/logout");
-		setState({ isAuthenticated: false });
+		setState.current({ isAuthenticated: false, isLoading: false });
 	};
+
+	useEffect(() => {
+		initAuthState().then((s) => {
+			if (state.current.isLoading) {
+				setState.current(s);
+			}
+		});
+	}, []);
 
 	return (
 		<Context.Provider value={{ ...ctx, login, register, logout }}>
@@ -57,11 +83,10 @@ export const AuthProvider = ({ children, state = { isAuthenticated: false } }: P
 	);
 };
 
-
 export const WithAuth = ({ children }: PropsWithChildren) => {
 	const { isAuthenticated } = useAuth();
 
-	if(!isAuthenticated)
+	if (!isAuthenticated)
 		return null;
 
 	return children;

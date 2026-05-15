@@ -1,4 +1,4 @@
-import { useAuth } from "../context/auth";
+import { useAuth } from "../auth/context";
 
 import "./styles/navbar.scss";
 

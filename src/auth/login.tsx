@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { useAuth } from "../context/auth";
+import { useAuth } from "./context";
 
 import "./styles/login.scss";
 

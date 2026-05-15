@@ -1,0 +1,93 @@
+.layout-root {
+	height: 100%;
+	width: 100%;
+	.layout {
+		position: relative;
+		display: flex;
+		flex: 1;
+
+		&.horizontal {
+			& > .panel {
+				position: relative;
+				height: 100%;
+			}
+
+			& > .slider {
+				&:last-child {
+					display: none;	
+				}
+				width: 7px;
+				height: 100%;
+				background-color: transparent;
+				transition: 150ms;
+				position: relative;
+				&::after {
+					content: "";
+					position: absolute;
+					top: 15px;
+					bottom: 15px;
+					border-radius: 6px;
+					left: -1px;
+					width: 100%;
+					transition: 150ms;
+					background-color: transparent;
+				}
+
+				&:hover {
+					&::after {
+						z-index: 999;
+						width: 11px;
+						background-color: var(--bg-1);
+					}
+
+					cursor: ew-resize;
+				}
+			}
+		}
+
+		&.vertical {
+			& > .panel {
+				width: 100%;
+			}
+
+			& > .slider {
+				&:last-child {
+					display: none;	
+				}
+				height: 7px;
+				width: 100%;
+				background-color: transparent;
+				transition: 150ms;
+				position: relative;
+
+				&::after {
+					content: "";
+					position: absolute;
+					left: 15px;
+					right: 15px;
+					border-radius: 6px;
+					top: -1px;
+					height: 7px;
+					transition: 150ms;
+					background-color: transparent;
+				}
+
+				&:hover {
+					&::after {
+						z-index: 999;
+						height: 11px;
+						background-color: var(--bg-1);
+					}
+
+					cursor: ns-resize;
+				}
+			}
+		}
+	}
+
+	.panel {
+		flex: 1;
+		overflow: hidden;
+		position: relative;
+	}
+}
