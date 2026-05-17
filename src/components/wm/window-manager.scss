@@ -1,0 +1,12 @@
+.window-manager {
+	display: flex;
+	.layout {
+		display: flex;
+		flex: 1;
+		.component {
+			flex: 1;
+			border: 1px solid black;
+			overflow: hidden;
+		}
+	}
+}
