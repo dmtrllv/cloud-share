@@ -2,13 +2,15 @@ import { useEffect, useRef, useState } from "react"
 import { api } from "../../api";
 import { PathBar } from "./path-bar";
 import { storageEvents, type MakeDirEvent } from "./events";
+import { useWindowContext } from "../wm";
 
 import "./styles/storage.scss";
 
 export const Storage = ({ path = "/" }: { path?: string }) => {
+	const ctx = useWindowContext();
+
 	const reqId = useRef(0);
-	const [entries, setEntries] = useState<Entry[]>([]);
-	const [state, setState] = useState<StorageState>({ requestingPath: path, viewingPath: null });
+	const [state, setState] = ctx.useState<StorageState>({ requestingPath: path, viewingPath: null, entries: [] });
 	const [addFolderState, setAddFolderState] = useState<AddFolderState>({ show: false, name: "" });
 
 	const currentPath = state.requestingPath || state.viewingPath || "/";
@@ -30,16 +32,17 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 				setState({
 					requestingPath: null,
 					viewingPath: path,
+					entries: res.data.children.map(s => s)
 				});
-				setEntries(res.data.children.map(s => s));
 			} else {
 				console.error(res.error);
-				setState({ error: res.error });
-				setEntries([]);
+				setState({
+					error: res.error,
+					entries: []
+				});
 			}
 		});
 	};
-
 
 	const addFolder = async () => {
 		const name = addFolderState.name;
@@ -69,7 +72,8 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 	};
 
 	useEffect(() => {
-		openPath(path);
+		if (state.requestingPath)
+			openPath(state.requestingPath);
 	}, [path]);
 
 	useEffect(() => {
@@ -92,13 +96,18 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 	useEffect(() => {
 		const handler = (e: MakeDirEvent) => {
 			if (e.parentPath === currentPath) {
-				setEntries((entries) => {
-					const parentPath = currentPath === "/" ? "" : currentPath;
-					const f = entries.find(u => u.path === `${parentPath}/${e.newDirName}`);
-					if (f)
-						return entries;
-					return [...entries, { isFile: false, path: `${currentPath}/${e.newDirName}` }]
-				});
+
+				const parentPath = currentPath === "/" ? "" : currentPath;
+				const f = state.entries.find(u => u.path === `${parentPath}/${e.newDirName}`);
+				if (!f) {
+					setState({
+						...state,
+						entries: [
+							...state.entries,
+							{ isFile: false, path: `${currentPath}/${e.newDirName}` }
+						]
+					});
+				}
 			}
 		};
 		storageEvents.on("mkdir", handler);
@@ -109,12 +118,12 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 		<div className="storage">
 			<div className="dir-view">
 				<div className="top-buttons">
-					<div className="close" ><span>&#10006;</span></div>
+					<div className="close" onClick={ctx.close}><span>&#10006;</span></div>
 				</div>
 				<PathBar openPath={openPath} path={state.viewingPath || "/"} onNewFolder={onNewFolder} />
 				<div className="entries">
-					{entries.length === 0 ? <div>Nothing here yet!</div> : null}
-					{entries.map(e => <EntryView key={e.path} openPath={openPath} {...e} />)}
+					{state.entries.length === 0 ? <div>Nothing here yet!</div> : null}
+					{state.entries.map(e => <EntryView key={e.path} openPath={openPath} {...e} />)}
 					{state.error && <h1>Error: {state.error}</h1>}
 				</div>
 				<form onSubmit={onNewFolderSubmit} className={`add-folder-panel ${addFolderState.show ? "show" : ""}`} onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
@@ -133,7 +142,7 @@ const EntryView = ({ openPath, path }: { openPath: (path: string) => void; path:
 		e.stopPropagation();
 		console.log(e);
 	};
-	
+
 	return (
 		<div className="entry" onClick={() => openPath(path)} onContextMenu={onContextMenu}>
 			&#x1F5C0; {path.split("/").pop()}
@@ -161,6 +170,8 @@ type ErrState = {
 	error: any;
 };
 
-type StorageState = OneOf<DirProps, ErrState>;
+type StorageState = OneOf<DirProps, ErrState> & {
+	entries: Entry[];
+};
 
 type OneOf<T, U> = ({ [K in keyof T]?: undefined } & { [K in keyof U]: U[K] }) | ({ [K in keyof U]?: undefined } & { [K in keyof T]: T[K] });

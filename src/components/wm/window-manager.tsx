@@ -73,10 +73,10 @@ export const WindowManager = ({ tree }: { tree: NodeTree }) => {
 
 			if (index < 0) {
 				throw new Error("node is not a child!");
-			} 
-			
+			}
+
 			parent.children.splice(index, 1);
-			
+
 
 			if (parent.children.length === 1) {
 				upgradeLayout(nodes, parent);
@@ -217,6 +217,22 @@ export const WindowManager = ({ tree }: { tree: NodeTree }) => {
 				}
 			});
 			setDraggingId(null);
+		},
+		useState(id: number) {
+			const node = getNode(id) as Component;
+			return <S extends any>(initialState: S | (() => S)): [S, (state: S) => void] => {
+				const [s, setState] = useState(() => {
+					if(node.state === undefined) {
+						node.state = initialState;
+					}
+					console.log(node.state, id);
+					return node.state;
+				});
+				return [s, (newState) => {
+					node.state = newState;
+					setState(newState);
+				}];
+			};
 		}
 	};
 
@@ -231,5 +247,6 @@ export type WmContext = {
 	readonly startDrag: (id: number) => void;
 	readonly stopDrag: (id: number, position: "left" | "right" | "top" | "bottom") => void;
 	readonly close: (id: number) => void;
+	readonly useState: (id: number) => <S>(initialState: S | (() => S)) => [S, (state: S) => void];
 	readonly draggingId: number | null;
 };

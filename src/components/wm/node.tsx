@@ -39,7 +39,8 @@ export const parseTree = (idCounter: Counter, tree: NodeTree): { nodes: Nodes, r
 		const node: Component = {
 			id: idCounter.next(),
 			Component,
-			parent: parent.id
+			parent: parent.id,
+			state: undefined
 		};
 		nodes[node.id] = node;
 		parent.children.push(node.id);
