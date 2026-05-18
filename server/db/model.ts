@@ -140,7 +140,7 @@ export abstract class Model {
 						case "date":
 							throw new Error("TODO");
 						default:
-							ands.push(`${k} = $${values.push(val)}`);
+							ands.push(`"${k}" = $${values.push(val)}`);
 							break;
 					}
 				} else {
@@ -161,12 +161,12 @@ export abstract class Model {
 
 	private static parseWhereNumber(key: string, val: WhereOp<number>, values: any[]) {
 		if (typeof val === "number") {
-			return `${key} = $${values.push(val)}`;
+			return `"${key}" = $${values.push(val)}`;
 		}
 
 		return Object.keys(val).map(op => {
 			const opVal = (val as any)[op];
-			return `${key} ${op} $${values.push(opVal)}`;
+			return `"${key}" ${op} $${values.push(opVal)}`;
 		}).join(" AND ");
 	}
 
@@ -201,7 +201,7 @@ export abstract class Model {
 			}
 		});
 
-		let q = `INSERT INTO ${tableName} (${keys.join(", ")}) VALUES (${placeholders.join(",")}) RETURNING *`;
+		let q = `INSERT INTO ${tableName} (${keys.map(k => `"${k.toString()}"`).join(", ")}) VALUES (${placeholders.join(",")}) RETURNING *`;
 		console.log(q, values);
 		const result = await Database.get().pool.query(q, values);
 
@@ -219,17 +219,17 @@ export abstract class Model {
 			if (refKeys.includes(key.toString())) {
 				if (v !== null) {
 					if(typeof v === "number") {
-						return `${key.toString()} = $${values.push(v)}`;
+						return `"${key.toString()}" = $${values.push(v)}`;
 					} else {
 						const Class = (v as any).constructor as typeof Model;
 						const idKey = Class.getPrimaryKey();
-						return `${key.toString()} = $${values.push(v![idKey as keyof typeof v])}`;
+						return `"${key.toString()}" = $${values.push(v![idKey as keyof typeof v])}`;
 					}
 				} else {
-					return `${key.toString()} = $${values.push(null)}`;
+					return `"${key.toString()}" = $${values.push(null)}`;
 				}
 			} else {
-				return `${key.toString()} = $${values.push(v)}`;
+				return `"${key.toString()}" = $${values.push(v)}`;
 			}
 		});
 		

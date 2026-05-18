@@ -4,6 +4,8 @@ import { User } from "../models/user.js";
 import { StorageService } from "../services/storage.js";
 import { FsEntry } from "../models/entry.js";
 
+import { createWriteStream } from "fs";
+
 export const fs = Router({ strict: true });
 
 fs.get("/ls/{*splat}", isAuthenticated, async (req, res) => {
@@ -67,4 +69,43 @@ fs.post("/move/{*splat}", isAuthenticated, async (req, res) => {
 		const error = e instanceof Error ? e.message : e;
 		return res.json({ error });
 	}
+});
+
+fs.post("/upload/{*splat}", isAuthenticated, async (req, res) => {
+	const path = req.url.replace("/upload", "");
+	const owner = await User.findOne({ where: { id: req.session.userId! } });
+	if (!owner)
+		return res.json({ error: "Could not get user info!" });
+
+	let filename = req.header("X-Filename");
+
+	if (!filename)
+		return res.json({ error: "Missing filename!" });
+
+	filename = decodeURIComponent(filename);
+	let fullPath = (path === "/" ? "" : path) + "/" + filename;
+
+	const entry = await StorageService.get().createFileEntry(owner, fullPath);
+	if (!entry) {
+		return res.json({ error: "Could not create file!" });
+	}
+
+	const absolutePath = StorageService.get().absolutePath(owner, entry.path);
+
+	const writeStream = createWriteStream(absolutePath);
+
+	req.pipe(writeStream);
+	let didError = false;
+	req.on("end", () => {
+		if (!didError)
+			res.json({ data: true });
+		else
+			res.end();
+	});
+
+	return req.on("error", (err) => {
+		didError = true;
+		console.error(err);
+		res.json({ error: { name: err.name, message: err.message } });
+	});
 });

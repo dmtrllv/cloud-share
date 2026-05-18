@@ -96,7 +96,7 @@ export class Database {
 			const { primaryKey, type, nullable, unique } = columns![key]!;
 
 			if (primaryKey) {
-				return `${key} SERIAL PRIMARY KEY`;
+				return `"${key}" SERIAL PRIMARY KEY`;
 			} else if (typeof type === "function") /* ref */ {
 				foreignKeys.push(key);
 				const ref = Class.getRefModel(key);
@@ -105,7 +105,7 @@ export class Database {
 					throw new Error(`Could not get referenced Model for ${tableName}.${key}!`);
 				}
 
-				let str = `${key} INT`;
+				let str = `"${key}" INT`;
 				if (!nullable) {
 					str += " NOT NULL";
 				}
@@ -114,7 +114,7 @@ export class Database {
 				}
 				return str;
 			} else {
-				let str = `${key} ${type}`;
+				let str = `"${key}" ${type}`;
 				if (!nullable) {
 					str += " NOT NULL";
 				}

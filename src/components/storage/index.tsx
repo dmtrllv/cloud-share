@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { api } from "../../api";
 import { PathBar } from "./path-bar";
-import { storageEvents, type MakeDirEvent, type MoveEvent } from "./events";
+import { storageEvents, type MakeDirEvent, type MoveEvent, type UploadEvent } from "./events";
 import { useWindowContext } from "../wm";
 import { Titlebar } from "./title-bar";
 import { EntryView } from "./list-entry";
@@ -149,11 +149,29 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 			}
 		};
 
+		const onUpload = (e: UploadEvent) => {
+			if (e.target.value === currentPath.value) {
+				const parentPath = currentPath.value === "/" ? "" : currentPath;
+				const f = state.entries.find(u => u.path === `${parentPath}/${e.name}`);
+				if (!f) {
+					setState((state) => ({
+						...state,
+						entries: [
+							...state.entries,
+							{ isFile: true, path: `${parentPath}/${e.name}` }
+						]
+					}));
+				}
+			}
+		}
+
 		storageEvents.on("mkdir", onMakeDir);
 		storageEvents.on("move", onMove)
+		storageEvents.on("upload", onUpload);
 		return () => {
 			storageEvents.remove("mkdir", onMakeDir);
 			storageEvents.remove("move", onMove);
+			storageEvents.remove("upload", onUpload);
 		};
 	}, [currentPath]);
 
@@ -192,9 +210,28 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 
 	const vp = state.viewingPath || createPath("/");
 
+	const onDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+		e.preventDefault();
+
+		const file = e.dataTransfer?.files?.[0];
+		if (!file)
+			return;
+
+		await api.post(`/fs/upload${currentPath}`, file, {
+			headers: {
+				"Content-Type": "application/octet-stream",
+				"X-Filename": encodeURIComponent(file.name),
+			}
+		}).then((res) => {
+			if (res.data) {
+				storageEvents.emit("upload", { name: file.name, target: currentPath });
+			}
+		});
+	};
+
 	return (
 		<div className="storage">
-			<div className="dir-view" onMouseUp={onMouseUp}>
+			<div className="dir-view" onMouseUp={onMouseUp} onDragOver={(e) => e.preventDefault()} onDrop={onDrop}>
 				<Titlebar onClose={close} closable={windowContext.componentCount() > 1} startDrag={windowContext.startDrag} path={vp} />
 				<PathBar openPath={openPath} path={vp} onNewFolder={onNewFolder} />
 				<div className="entries">

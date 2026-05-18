@@ -6,6 +6,7 @@ export const storageEvents = new EventEmitter<StorageEvents>();
 export type StorageEvents = {
 	readonly mkdir: MakeDirEvent;
 	readonly move: MoveEvent;
+	readonly upload: UploadEvent;
 };
 
 export type MakeDirEvent = {
@@ -15,5 +16,10 @@ export type MakeDirEvent = {
 
 export type MoveEvent = {
 	readonly entry: Path;
+	readonly target: Path;
+};
+
+export type UploadEvent = {
+	readonly name: string;
 	readonly target: Path;
 };

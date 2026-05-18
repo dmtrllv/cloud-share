@@ -1,7 +1,7 @@
 import type { Path } from "../../utils/path";
 import { useStorageDragDropContext } from "./drag-drop";
 
-export const EntryView = ({ openPath, path, windowId }: EntryProps) => {
+export const EntryView = ({ openPath, path, windowId, isFile }: EntryProps) => {
 	const ctx = useStorageDragDropContext();
 
 	const onContextMenu = (e: React.MouseEvent) => {
@@ -9,10 +9,10 @@ export const EntryView = ({ openPath, path, windowId }: EntryProps) => {
 		e.stopPropagation();
 		console.log(e);
 	};
-	
+	console.log(isFile)
 	return (
 		<div className="entry" onMouseDown={() => ctx.startDrag({ path, windowId })} onClick={() => openPath(path)} onContextMenu={onContextMenu}>
-			&#x1F5C0; {path.basename()}
+			{!isFile ? <span>&#x1F5C0;</span> : ""} {path.basename()}
 		</div>
 	);
 };

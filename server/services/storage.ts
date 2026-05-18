@@ -8,6 +8,28 @@ import { rm, cp } from "node:fs/promises";
 import { FsEntry } from "../models/entry.js";
 
 export class StorageService extends Service {
+	public absolutePath(owner: User, p: string) {
+		p = posixPath.normalize(p);
+		return path.resolve(this.storageRoot, owner.id.toString(), "./" + p);
+	}
+
+	public async createFileEntry(owner: User, filePath: string): Promise<FsEntry | null> {
+		filePath = posixPath.normalize(filePath);
+		const absolutePath = path.resolve(this.storageRoot, owner.id.toString(), "./" + filePath);
+
+		if (existsSync(absolutePath)) {
+			throw new Error(`${filePath} already exists!`);
+		}
+
+		const parent = await FsEntry.findOne({ what: ["id"], where: { path: posixPath.dirname(filePath) } });
+
+		if (!parent) {
+			throw new Error(`Could not get parent entry for ${filePath}!`);
+		}
+
+		return await FsEntry.insert({ parent: parent.id, path: filePath, owner, isFile: true });
+	}
+
 	public readonly storageRoot: string = this.initStorageRoot();
 
 	private initStorageRoot(): string {
@@ -64,7 +86,7 @@ export class StorageService extends Service {
 
 		await cp(absolutePath, absoluteTargetPath, { recursive: true });
 		const updatedEntries = await FsEntry.update({ id: entry.id }, { parent: parent.id, path: newPath });
-		
+
 		if (updatedEntries.length === 0) {
 			console.warn("? nothing updated?");
 			return null;
