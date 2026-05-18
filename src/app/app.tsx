@@ -1,10 +1,12 @@
-import { Navbar, Storage } from "../components";
+import { Storage } from "../components";
 import { useAuth, WithAuth } from "../auth/context";
 import { LoginPanel } from "../auth";
-import { layout, WindowManager } from "../components/wm";
+import { component, layout, WindowLayoutRenderer, WindowManagerContext } from "../components/wm";
+import { StorageDragDropManager } from "../components/storage/drag-drop";
+import { Menubar } from "../components/menubar/menubar";
 
 import "./styles/app.scss";
-import { StorageDragDropManager } from "../components/storage/drag-drop";
+import { item, createMenu } from "../components/menubar/menu";
 
 export const App = () => {
 	const auth = useAuth();
@@ -18,18 +20,28 @@ export const App = () => {
 };
 
 const tree = layout("row", [
-	Storage,
-	Storage,
+	component(Storage),
+	component(Storage),
 ]);
+
+const menuItems = createMenu(
+	item("apps", [
+		item("file explorer", () => {
+
+		})
+	]),
+);
 
 const LoadedApp = () => {
 	return (
 		<>
-			<Navbar />
 			<WithAuth>
-				<StorageDragDropManager>
-					<WindowManager tree={tree} />
-				</StorageDragDropManager>
+				<WindowManagerContext tree={tree}>
+					<Menubar />
+					<StorageDragDropManager>
+						<WindowLayoutRenderer />
+					</StorageDragDropManager>
+				</WindowManagerContext>
 			</WithAuth>
 			<LoginPanel />
 		</>

@@ -3,10 +3,11 @@ import { createContext, useContext, useState } from "react";
 
 import "./component.scss";
 
-export type Component = {
+export type Component<P extends {}> = {
 	readonly id: number;
 	parent: number;
-	readonly Component: React.FC;
+	readonly Component: React.FC<P>;
+	readonly props: P;
 	state: any;
 };
 
@@ -28,7 +29,7 @@ const WindowContext = createContext<WindowContext>({
 
 export const useWindowContext = () => useContext(WindowContext);
 
-export const ComponentNode = ({ id, Component, wm }: WithWm<Component>) => {
+export const ComponentNode = <P extends {}>({ id, Component, wm, props }: WithWm<Component<P>>) => {
 	const draggingCn = wm.draggingId !== null && wm.draggingId !== id ? "dragging" : "";
 
 	const ctx: WindowContext = {
@@ -42,7 +43,7 @@ export const ComponentNode = ({ id, Component, wm }: WithWm<Component>) => {
 	return (
 		<div className={`component ${draggingCn}`}>
 			<WindowContext.Provider value={ctx}>
-				<Component />
+				<Component {...props}/>
 			</WindowContext.Provider>
 			<div className="dragging-overlay">
 				<div className="left" onMouseUp={() => wm.stopDrag(id, "left")} />

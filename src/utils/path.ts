@@ -29,8 +29,6 @@ export const path = (string: string): Path => {
 			const p = this.normalize().value;
 			const parts = p.split("/");
 			parts.pop();
-			//if(p.startsWith("/") && )
-			//return path(`/${parts.join("/")}`);
 			return path(parts.join("/") || "/");
 		},
 		clone() {

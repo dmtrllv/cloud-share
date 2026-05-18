@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useState, type PropsWithChildren } from "react";
 import { notNullOr } from "../../utils";
-import { isComponent, isLayout, isRoot, parseTree, type Node, type Nodes, type NodeTree } from "./node";
+import { isComponent, isLayout, isRoot, layout, parseTree, type Node, type Nodes, type NodeTree } from "./node";
 import { type Component } from "./component";
 import { LayoutNode, type Layout, type LayoutDirection } from "./layout";
 import { Counter } from "../../utils/counter";
@@ -11,10 +11,38 @@ import "./window-manager.scss";
 
 export type RootLayout = Layout & { readonly parent: null };
 
-export const WindowManager = ({ tree }: { tree: NodeTree }) => {
+type ContextType = RenderContextType & WindowManagerContextType;
+
+type RenderContextType = {
+	readonly root: Layout,
+	readonly nodes: Nodes,
+	readonly ctx: WmContext
+};
+
+const Context = createContext<ContextType | null>(null);
+
+type WindowManagerContextType = {
+	readonly open: <P extends {}>(Component: React.FC<P>, ...[props]: {} extends P ? [] | [P] : [P]) => void;
+};
+
+export const useWindowManager = () => {
+	const ctx = useContext(Context);
+	if (ctx === null)
+		throw new Error(`No window manager context provided!`);
+	return ctx;
+};
+
+export const useRenderContext = (): RenderContextType => {
+	const ctx = useContext(Context);
+	if (ctx === null)
+		throw new Error(`No window manager context provided!`);
+	return ctx;
+};
+
+export const WindowManagerContext = ({ tree, children }: PropsWithChildren<{ tree?: NodeTree }>) => {
 	const idCounter = useMemo(() => new Counter(), []);
 
-	const [state, setState] = useState(() => parseTree(idCounter, tree));
+	const [state, setState] = useState(() => parseTree(idCounter, tree || layout("row")));
 	const [draggingId, setDraggingId] = useState<number | null>(null);
 
 	const createLayout = (nodes: Nodes, parent: number, direction: LayoutDirection, children: number[] = []) => {
@@ -128,7 +156,7 @@ export const WindowManager = ({ tree }: { tree: NodeTree }) => {
 
 				const nodes = { ...state.nodes };
 
-				const draggingNode = (getNode(draggingId) as Component);
+				const draggingNode = (getNode(draggingId) as Component<any>);
 				removeNode(nodes, draggingId, false);
 
 				const targetNode = getNode(targetId);
@@ -219,7 +247,7 @@ export const WindowManager = ({ tree }: { tree: NodeTree }) => {
 			setDraggingId(null);
 		},
 		useState: (id: number): any => {
-			const node = getNode(id) as Component;
+			const node = getNode(id) as Component<any>;
 			return <S extends any>(initialState: S | (() => S)): [S, (state: S) => void] => {
 				const [s, setState] = useState(() => {
 					if (node.state === undefined) {
@@ -244,9 +272,42 @@ export const WindowManager = ({ tree }: { tree: NodeTree }) => {
 		}
 	};
 
+	const open = <P extends {}>(Component: React.FC<P>, ...[props]: {} extends P ? [] | [P] : [P]) => {
+		setState(s => {
+			
+			const rootNode = getNode(s.rootId) as Layout;
+			const node: Component<P> = {
+				Component,
+				props: props || {} as any,
+				id: idCounter.next(),
+				parent: rootNode.id,
+				state: undefined,
+			};
+
+			rootNode.children.push(node.id);
+			const nodes = { ...s.nodes };
+			nodes[node.id] = node;
+
+			return {
+				...s,
+				nodes
+			}
+		})
+	};
+
+	return (
+		<Context.Provider value={{ ctx, nodes: state.nodes, root: rootNode, open }}>
+			{children}
+		</Context.Provider>
+	)
+};
+
+export const WindowLayoutRenderer = () => {
+	const ctx = useRenderContext();
+
 	return (
 		<div className="window-manager">
-			<LayoutNode wm={ctx} nodes={state.nodes} {...rootNode} />
+			<LayoutNode wm={ctx.ctx} nodes={ctx.nodes} {...ctx.root} />
 		</div>
 	);
 };

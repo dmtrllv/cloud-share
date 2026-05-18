@@ -212,7 +212,6 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 	);
 };
 
-
 type AddFolderState = {
 	readonly show: boolean;
 	readonly name: string;
