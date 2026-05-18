@@ -225,7 +225,6 @@ export const WindowManager = ({ tree }: { tree: NodeTree }) => {
 					if (node.state === undefined) {
 						node.state = initialState;
 					}
-					console.log(node.state, id);
 					return node.state;
 				});
 				return [s, (newState) => {
