@@ -233,6 +233,9 @@ export const WindowManager = ({ tree }: { tree: NodeTree }) => {
 					setState(newState);
 				}];
 			};
+		},
+		componentCount: () => {
+			return Object.values(state.nodes).filter(n => isComponent(n)).length;
 		}
 	};
 
@@ -249,4 +252,5 @@ export type WmContext = {
 	readonly close: (id: number) => void;
 	readonly useState: (id: number) => <S>(initialState: S | (() => S)) => [S, (state: S) => void];
 	readonly draggingId: number | null;
+	readonly componentCount: () => number;
 };

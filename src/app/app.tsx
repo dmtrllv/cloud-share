@@ -4,6 +4,7 @@ import { LoginPanel } from "../auth";
 import { layout, WindowManager } from "../components/wm";
 
 import "./styles/app.scss";
+import { StorageDragDropManager } from "../components/storage/drag-drop";
 
 export const App = () => {
 	const auth = useAuth();
@@ -32,8 +33,9 @@ const LoadedApp = () => {
 		<>
 			<Navbar />
 			<WithAuth>
-				{/*<LayoutManager {...layout} />*/}
-				<WindowManager tree={tree} />
+				<StorageDragDropManager>
+					<WindowManager tree={tree} />
+				</StorageDragDropManager>
 			</WithAuth>
 			<LoginPanel />
 		</>

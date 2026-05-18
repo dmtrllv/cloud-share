@@ -3,14 +3,18 @@ import { api } from "../../api";
 import { PathBar } from "./path-bar";
 import { storageEvents, type MakeDirEvent } from "./events";
 import { useWindowContext } from "../wm";
+import { Titlebar } from "./title-bar";
+import { EntryView } from "./list-entry";
+import { useStorageDragDropContext } from "./drag-drop";
 
 import "./styles/storage.scss";
 
 export const Storage = ({ path = "/" }: { path?: string }) => {
-	const ctx = useWindowContext();
+	const windowContext = useWindowContext();
+	const dragDropContext = useStorageDragDropContext();
 
 	const reqId = useRef(0);
-	const [state, setState] = ctx.useState<StorageState>({ requestingPath: path, viewingPath: null, entries: [] });
+	const [state, setState] = windowContext.useState<StorageState>({ requestingPath: path, viewingPath: null, entries: [] });
 	const [addFolderState, setAddFolderState] = useState<AddFolderState>({ show: false, name: "" });
 
 	const currentPath = state.requestingPath || state.viewingPath || "/";
@@ -114,16 +118,47 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 		return () => { storageEvents.remove("mkdir", handler) };
 	}, [currentPath]);
 
+	const close = () => {
+		if (windowContext.componentCount() > 1) {
+			windowContext.close();
+		}
+	};
+
+	const onMouseUp = () => {
+		if (!dragDropContext.dragState)
+			return;
+
+		if ("windowId" in dragDropContext.dragState) {
+			if (dragDropContext.dragState.windowId === windowContext.id)
+				return;
+		}
+
+		if (!("path" in dragDropContext.dragState))
+			return;
+
+		const path = dragDropContext.dragState.path;
+
+		if (path === currentPath)
+			return;
+
+		const parts = path.split("/");
+		const filename = parts.pop();
+		const parent = parts.join("/") || "/";
+
+		if (parent === currentPath)
+			return;
+
+		console.log("Move ", path, " to ", currentPath + `/` + filename, "from parent", parent);
+	};
+
 	return (
 		<div className="storage">
-			<div className="dir-view">
-				<div className="top-buttons">
-					<div className="close" onClick={ctx.close}><span>&#10006;</span></div>
-				</div>
+			<div className="dir-view" onMouseUp={onMouseUp}>
+				<Titlebar onClose={close} closable={windowContext.componentCount() > 1} startDrag={windowContext.startDrag} path={state.viewingPath || "/"} />
 				<PathBar openPath={openPath} path={state.viewingPath || "/"} onNewFolder={onNewFolder} />
 				<div className="entries">
 					{state.entries.length === 0 ? <div>Nothing here yet!</div> : null}
-					{state.entries.map(e => <EntryView key={e.path} openPath={openPath} {...e} />)}
+					{state.entries.map(e => <EntryView key={e.path} windowId={windowContext.id} openPath={openPath} {...e} />)}
 					{state.error && <h1>Error: {state.error}</h1>}
 				</div>
 				<form onSubmit={onNewFolderSubmit} className={`add-folder-panel ${addFolderState.show ? "show" : ""}`} onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
@@ -136,19 +171,6 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 	);
 };
 
-const EntryView = ({ openPath, path }: { openPath: (path: string) => void; path: string; isFile: boolean }) => {
-	const onContextMenu = (e: React.MouseEvent) => {
-		e.preventDefault();
-		e.stopPropagation();
-		console.log(e);
-	};
-
-	return (
-		<div className="entry" onClick={() => openPath(path)} onContextMenu={onContextMenu}>
-			&#x1F5C0; {path.split("/").pop()}
-		</div>
-	);
-};
 
 type AddFolderState = {
 	readonly show: boolean;
