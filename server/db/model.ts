@@ -208,8 +208,37 @@ export abstract class Model {
 		return Model.fromRow(this, result.rows[0]);
 	}
 
-	public static update<T extends typeof Model>(this: T, _data: Partial<NewProps<InstanceType<T>>>): NewModel<InstanceType<T>> {
-		throw null;
+	public static async update<T extends typeof Model>(this: T, where: Where<InstanceType<T>>, _data: Partial<NewProps<InstanceType<T>>>): Promise<NewModel<InstanceType<T>>[]> {
+		const tableName = this.getTableName();
+
+		const refKeys = this.getRefKeys();
+		const values: any[] = [];
+		const keys = objKeys(_data);
+		const columns: any[] = keys.map(key => {
+			const v = _data[key];
+			if (refKeys.includes(key.toString())) {
+				if (v !== null) {
+					if(typeof v === "number") {
+						return `${key.toString()} = $${values.push(v)}`;
+					} else {
+						const Class = (v as any).constructor as typeof Model;
+						const idKey = Class.getPrimaryKey();
+						return `${key.toString()} = $${values.push(v![idKey as keyof typeof v])}`;
+					}
+				} else {
+					return `${key.toString()} = $${values.push(null)}`;
+				}
+			} else {
+				return `${key.toString()} = $${values.push(v)}`;
+			}
+		});
+		
+		const whereString = this.parseWhere(where, values);
+
+		let q = `UPDATE ${tableName} SET \n${columns.map(n => `\t${n}\n`).join(", ")}\nWHERE ${whereString} RETURNING *`;
+		console.log(q, values);
+		const result = await Database.get().pool.query(q, values);
+		return result.rows.map((row) => Model.fromRow(this, row)) as any;
 	}
 }
 

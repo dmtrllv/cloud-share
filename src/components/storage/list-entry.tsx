@@ -1,3 +1,4 @@
+import type { Path } from "../../utils/path";
 import { useStorageDragDropContext } from "./drag-drop";
 
 export const EntryView = ({ openPath, path, windowId }: EntryProps) => {
@@ -8,17 +9,17 @@ export const EntryView = ({ openPath, path, windowId }: EntryProps) => {
 		e.stopPropagation();
 		console.log(e);
 	};
-
+	
 	return (
 		<div className="entry" onMouseDown={() => ctx.startDrag({ path, windowId })} onClick={() => openPath(path)} onContextMenu={onContextMenu}>
-			&#x1F5C0; {path.split("/").pop()}
+			&#x1F5C0; {path.basename()}
 		</div>
 	);
 };
 
 export type EntryProps = {
 	windowId: number;
-	openPath: (path: string) => void;
-	path: string;
+	openPath: (path: Path) => void;
+	path: Path;
 	isFile: boolean;
 };

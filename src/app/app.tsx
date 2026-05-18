@@ -18,14 +18,8 @@ export const App = () => {
 };
 
 const tree = layout("row", [
-	layout("column", [
-		Storage,
-		Storage,
-		Storage
-	]),
-	layout("column", [
-		Storage,
-	])
+	Storage,
+	Storage,
 ]);
 
 const LoadedApp = () => {

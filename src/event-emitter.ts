@@ -13,7 +13,10 @@ export class EventEmitter<T extends Events> {
 	}
 
 	public readonly remove = <K extends keyof T>(event: K, listener: (e: T[K]) => any): this => {
-		this.getListeners(event).push(listener);
+		const listeners = this.getListeners(event);
+		const index = listeners.indexOf(listener);
+		if(index > -1)
+			listeners.splice(index, 1);
 		return this;
 	}
 

@@ -6,13 +6,14 @@ import { FsEntry } from "../models/entry.js";
 
 export const fs = Router({ strict: true });
 
-fs.get("{*splat}", isAuthenticated, async (req, res) => {
+fs.get("/ls/{*splat}", isAuthenticated, async (req, res) => {
+	const path = req.url.replace("/ls", "");
 	const owner = await User.findOne({ where: { id: req.session.userId! } });
 
 	if (!owner)
 		return res.json({ error: "Could not get user info!" });
 
-	const entry = await StorageService.get().getEntry(owner, req.url);
+	const entry = await StorageService.get().getEntry(owner, path);
 
 	if (!entry) {
 		return res.json({ error: "Could not find entry!" });
@@ -30,7 +31,8 @@ fs.get("{*splat}", isAuthenticated, async (req, res) => {
 	});
 });
 
-fs.post("{*splat}", isAuthenticated, async (req, res) => {
+fs.post("/mkdir/{*splat}", isAuthenticated, async (req, res) => {
+	const path = req.url.replace("/mkdir", "");
 	const owner = await User.findOne({ where: { id: req.session.userId! } });
 	if (!owner)
 		return res.json({ error: "Could not get user info!" });
@@ -40,7 +42,26 @@ fs.post("{*splat}", isAuthenticated, async (req, res) => {
 	}
 
 	try {
-		return res.json({ data: await StorageService.get().addSubDirectory(owner, req.url) });
+		return res.json({ data: await StorageService.get().addSubDirectory(owner, path) });
+	} catch (e) {
+		console.log(e);
+		const error = e instanceof Error ? e.message : e;
+		return res.json({ error });
+	}
+});
+
+fs.post("/move/{*splat}", isAuthenticated, async (req, res) => {
+	const path = req.url.replace("/move", "");
+	const owner = await User.findOne({ where: { id: req.session.userId! } });
+	if (!owner)
+		return res.json({ error: "Could not get user info!" });
+
+	if (!req.body.target) {
+		return res.json({ error: "TODO" });
+	}
+
+	try {
+		return res.json({ data: await StorageService.get().moveEntry(owner, path, req.body.target) !== null });
 	} catch (e) {
 		console.log(e);
 		const error = e instanceof Error ? e.message : e;

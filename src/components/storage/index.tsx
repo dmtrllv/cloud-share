@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react"
 import { api } from "../../api";
 import { PathBar } from "./path-bar";
-import { storageEvents, type MakeDirEvent } from "./events";
+import { storageEvents, type MakeDirEvent, type MoveEvent } from "./events";
 import { useWindowContext } from "../wm";
 import { Titlebar } from "./title-bar";
 import { EntryView } from "./list-entry";
 import { useStorageDragDropContext } from "./drag-drop";
+import { type Path, path as createPath } from "../../utils/path";
 
 import "./styles/storage.scss";
 
@@ -14,10 +15,10 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 	const dragDropContext = useStorageDragDropContext();
 
 	const reqId = useRef(0);
-	const [state, setState] = windowContext.useState<StorageState>({ requestingPath: path, viewingPath: null, entries: [] });
+	const [state, setState] = windowContext.useState<StorageState>({ requestingPath: createPath(path), viewingPath: null, entries: [] });
 	const [addFolderState, setAddFolderState] = useState<AddFolderState>({ show: false, name: "" });
 
-	const currentPath = state.requestingPath || state.viewingPath || "/";
+	const currentPath = state.requestingPath || state.viewingPath || createPath("/");
 
 	const nextId = () => {
 		reqId.current += 1;
@@ -26,9 +27,9 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 
 	const addFolderInputRef = useRef<HTMLInputElement>(null);
 
-	const openPath = (path: string) => {
+	const openPath = (path: Path) => {
 		const id = nextId();
-		api.get<{ children: Entry[] }>(`/fs${path}`).then((res) => {
+		api.get<{ children: Entry[] }>(`/fs/ls/${path}`).then((res) => {
 			if (id !== reqId.current)
 				return;
 
@@ -51,8 +52,8 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 	const addFolder = async () => {
 		const name = addFolderState.name;
 		if (!state.error && name && state.viewingPath) {
-			const parentPath = currentPath === "/" ? "" : currentPath;
-			api.post<Entry>(`/fs${parentPath}/${name}`).then(({ data, error }) => {
+			const parentPath = currentPath.value === "/" ? "" : currentPath;
+			api.post<Entry>(`/fs/mkdir${parentPath}/${name}`).then(({ data, error }) => {
 				if (data) {
 					setAddFolderState({ show: false, name: "" });
 					storageEvents.emit("mkdir", { parentPath: currentPath, newDirName: name });
@@ -98,24 +99,62 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 	}, [addFolderState]);
 
 	useEffect(() => {
-		const handler = (e: MakeDirEvent) => {
-			if (e.parentPath === currentPath) {
-
-				const parentPath = currentPath === "/" ? "" : currentPath;
+		const onMakeDir = (e: MakeDirEvent) => {
+			if (e.parentPath.value === currentPath.value) {
+				const parentPath = currentPath.value === "/" ? "" : currentPath;
 				const f = state.entries.find(u => u.path === `${parentPath}/${e.newDirName}`);
 				if (!f) {
 					setState((state) => ({
 						...state,
 						entries: [
 							...state.entries,
-							{ isFile: false, path: `${currentPath}/${e.newDirName}` }
+							{ isFile: false, path: `${parentPath}/${e.newDirName}` }
 						]
 					}));
 				}
 			}
 		};
-		storageEvents.on("mkdir", handler);
-		return () => { storageEvents.remove("mkdir", handler) };
+
+		const onMove = (e: MoveEvent) => {
+			if (e.target === currentPath) {
+				const newEntryName = e.entry.basename();
+				const parentPath = currentPath.value === "/" ? "" : currentPath.value;
+				const f = state.entries.find(u => u.path === `${parentPath}/${newEntryName}`);
+				if (!f) {
+					setState((state) => ({
+						...state,
+						entries: [
+							...state.entries,
+							{ isFile: false, path: `${parentPath}/${newEntryName}` }
+						]
+					}));
+				}
+			}
+			else {
+				const parentPath = e.entry.dirname();
+
+				if (parentPath.equals(currentPath)) {
+					setState((state) => {
+						const newEntries = [...state.entries];
+						const index = newEntries.findIndex(entry => e.entry.equals(entry.path));
+						if (index > -1)
+							newEntries.splice(index, 1);
+
+						return {
+							...state,
+							entries: newEntries
+						};
+					});
+				}
+			}
+		};
+
+		storageEvents.on("mkdir", onMakeDir);
+		storageEvents.on("move", onMove)
+		return () => {
+			storageEvents.remove("mkdir", onMakeDir);
+			storageEvents.remove("move", onMove);
+		};
 	}, [currentPath]);
 
 	const close = () => {
@@ -136,29 +175,31 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 		if (!("path" in dragDropContext.dragState))
 			return;
 
-		const path = dragDropContext.dragState.path;
+		const path = dragDropContext.dragState.path as Path;
 
-		if (path === currentPath)
+		if (path.equals(currentPath)) {
+			console.log(`path === currentPath`, path);
 			return;
+		}
 
-		const parts = path.split("/");
-		const filename = parts.pop();
-		const parent = parts.join("/") || "/";
-
-		if (parent === currentPath)
-			return;
-
-		console.log("Move ", path, " to ", currentPath + `/` + filename, "from parent", parent);
+		api.post<boolean>(`/fs/move${path}`, { target: currentPath.value }).then((result) => {
+			if (result.data) {
+				console.log("emit move", { entry: path, target: currentPath });
+				storageEvents.emit("move", { entry: path, target: currentPath });
+			}
+		});
 	};
+
+	const vp = state.viewingPath || createPath("/");
 
 	return (
 		<div className="storage">
 			<div className="dir-view" onMouseUp={onMouseUp}>
-				<Titlebar onClose={close} closable={windowContext.componentCount() > 1} startDrag={windowContext.startDrag} path={state.viewingPath || "/"} />
-				<PathBar openPath={openPath} path={state.viewingPath || "/"} onNewFolder={onNewFolder} />
+				<Titlebar onClose={close} closable={windowContext.componentCount() > 1} startDrag={windowContext.startDrag} path={vp} />
+				<PathBar openPath={openPath} path={vp} onNewFolder={onNewFolder} />
 				<div className="entries">
 					{state.entries.length === 0 ? <div>Nothing here yet!</div> : null}
-					{state.entries.map(e => <EntryView key={e.path} windowId={windowContext.id} openPath={openPath} {...e} />)}
+					{state.entries.map(e => <EntryView key={e.path} windowId={windowContext.id} openPath={openPath} path={createPath(e.path)} isFile={e.isFile} />)}
 					{state.error && <h1>Error: {state.error}</h1>}
 				</div>
 				<form onSubmit={onNewFolderSubmit} className={`add-folder-panel ${addFolderState.show ? "show" : ""}`} onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
@@ -184,8 +225,8 @@ type Entry = {
 }
 
 type DirProps = {
-	requestingPath: string | null;
-	viewingPath: string | null;
+	requestingPath: Path | null;
+	viewingPath: Path | null;
 };
 
 type ErrState = {

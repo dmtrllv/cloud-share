@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { type Path, path as createPath } from "../../utils/path";
 
 import "./styles/path-bar.scss";
 
@@ -22,8 +23,8 @@ const parsePathPaths = (path: string): PathPart[] => {
 	})];
 };
 
-export const PathBar = ({ path, openPath, onNewFolder }: { path: string, openPath: (path: string) => void, onNewFolder: (e: React.MouseEvent) => void }) => {
-	const parts = useMemo(() => parsePathPaths(path), [path]);
+export const PathBar = ({ path, openPath, onNewFolder }: { path: Path, openPath: (path: Path) => void, onNewFolder: (e: React.MouseEvent) => void }) => {
+	const parts = useMemo(() => parsePathPaths(path.value), [path.value]);
 
 	const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
@@ -38,7 +39,7 @@ export const PathBar = ({ path, openPath, onNewFolder }: { path: string, openPat
 	return (
 		<div className="path-bar">
 			{parts.map((part, i) => (
-				<div key={i} onMouseEnter={onMouseEnter(i)} onMouseLeave={onMouseLeave} className={`part ${hoverIndex !== null && i <= hoverIndex ? "hover" : ""}`} onClick={() => openPath(part.path)}>
+				<div key={i} onMouseEnter={onMouseEnter(i)} onMouseLeave={onMouseLeave} className={`part ${hoverIndex !== null && i <= hoverIndex ? "hover" : ""}`} onClick={() => openPath(createPath(part.path))}>
 					{part.name}
 				</div>
 			))}
