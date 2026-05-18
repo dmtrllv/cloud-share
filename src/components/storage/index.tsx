@@ -116,7 +116,7 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 		};
 
 		const onMove = (e: MoveEvent) => {
-			if (e.target === currentPath) {
+			if (e.target.equals(currentPath)) {
 				const newEntryName = e.entry.basename();
 				const parentPath = currentPath.value === "/" ? "" : currentPath.value;
 				const f = state.entries.find(u => u.path === `${parentPath}/${newEntryName}`);
