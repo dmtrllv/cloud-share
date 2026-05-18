@@ -1,4 +1,4 @@
-export const Titlebar = ({ path, startDrag, closable }: TitlebarProps) => {
+export const Titlebar = ({ path, startDrag, closable, onClose }: TitlebarProps) => {
 	return (
 		<div className="top-bar" onMouseDown={startDrag}>
 			<div className="title">
@@ -6,7 +6,7 @@ export const Titlebar = ({ path, startDrag, closable }: TitlebarProps) => {
 			</div>
 			<div className="top-buttons">
 				{closable && (
-					<div className="close" onClick={close}><span>&#10006;</span></div>
+					<div className="close" onClick={onClose}><span>&#10006;</span></div>
 				)}
 			</div>
 		</div>
