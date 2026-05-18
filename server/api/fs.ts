@@ -83,6 +83,7 @@ fs.post("/upload/{*splat}", isAuthenticated, async (req, res) => {
 		return res.json({ error: "Missing filename!" });
 
 	filename = decodeURIComponent(filename);
+	console.log(`uploading ${filename}`);
 	let fullPath = (path === "/" ? "" : path) + "/" + filename;
 
 	const entry = await StorageService.get().createFileEntry(owner, fullPath);

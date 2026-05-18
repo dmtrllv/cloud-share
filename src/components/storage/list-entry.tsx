@@ -9,9 +9,17 @@ export const EntryView = ({ openPath, path, windowId, isFile }: EntryProps) => {
 		e.stopPropagation();
 		console.log(e);
 	};
-	console.log(isFile)
+
+	const onClick = () => {
+		if(isFile) {
+			console.log("open file: ", path);
+			return;
+		}
+		openPath(path);
+	}
+	
 	return (
-		<div className="entry" onMouseDown={() => ctx.startDrag({ path, windowId })} onClick={() => openPath(path)} onContextMenu={onContextMenu}>
+		<div className="entry" onMouseDown={() => ctx.startDrag({ path, windowId })} onClick={onClick} onContextMenu={onContextMenu}>
 			{!isFile ? <span>&#x1F5C0;</span> : ""} {path.basename()}
 		</div>
 	);

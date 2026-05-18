@@ -10,3 +10,7 @@ export const ApiResponse = {
 	data: <T>(data: T): ApiResponse<T> => ({ data }),
 	error: <T>(error: string): ApiResponse<T> => ({ error })
 } as const;
+
+export const hasData = <T>(obj: ApiResponse<T>): obj is { data: T } => {
+	return "data" in obj;
+};

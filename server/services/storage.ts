@@ -78,10 +78,15 @@ export class StorageService extends Service {
 		const absoluteTargetPath = path.resolve(this.storageRoot, owner.id.toString(), "./" + targetPath, path.basename(entryPath));
 		const newPath = posixPath.normalize(targetPath + "/" + path.basename(entryPath));
 		const parent = await FsEntry.findOne({ where: { path: targetPath }, what: "id" });
+		console.log({entryPath});
 		const entry = await FsEntry.findOne({ where: { path: entryPath }, what: "id" });
 
-		if (!parent || !entry) {
-			throw new Error("parent | entry == null");
+		if (!parent) {
+			throw new Error("parent == null");
+		}
+
+		if (!entry) {
+			throw new Error("entry == null");
 		}
 
 		await cp(absolutePath, absoluteTargetPath, { recursive: true });

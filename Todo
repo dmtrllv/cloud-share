@@ -7,6 +7,10 @@ Features:
 	☐ Desktop app for syncing to local fs
 	☐ Sharing folders between accounts (RW permission)
 
+Bugs:
+	☐ Spaces in path wont let them be copies/moved
+
 Refactor:
 	☐ window-manager -> extract hooks and utils methods
 	☐ storage index -> seperate hooks and components
+	☐ make http/api routes take paths in its body to prevent url encoding

@@ -9,6 +9,7 @@ import { useStorageDragDropContext } from "./drag-drop";
 import { type Path, path as createPath } from "../../utils/path";
 
 import "./styles/storage.scss";
+import { hasData } from "../../../shared/api";
 
 export const Storage = ({ path = "/" }: { path?: string }) => {
 	const windowContext = useWindowContext();
@@ -201,9 +202,11 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 		}
 
 		api.post<boolean>(`/fs/move${path}`, { target: currentPath.value }).then((result) => {
-			if (result.data) {
+			if (hasData(result)) {
 				console.log("emit move", { entry: path, target: currentPath });
 				storageEvents.emit("move", { entry: path, target: currentPath });
+			} else {
+				console.error(result.error);
 			}
 		});
 	};
