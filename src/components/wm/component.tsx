@@ -14,7 +14,7 @@ export type WindowContext = {
 	readonly id: number;
 	readonly close: () => boolean;
 	readonly startDrag: () => boolean;
-	readonly useState: <S>(initialState: S | (() => S)) => [S, (state: S) => void];
+	readonly useState: <S>(initialState: S | (() => S)) => [S, React.Dispatch<React.SetStateAction<S>>];
 	readonly componentCount: () => number;
 };
 

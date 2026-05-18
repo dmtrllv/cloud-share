@@ -218,19 +218,25 @@ export const WindowManager = ({ tree }: { tree: NodeTree }) => {
 			});
 			setDraggingId(null);
 		},
-		useState(id: number) {
+		useState: (id: number): any => {
 			const node = getNode(id) as Component;
 			return <S extends any>(initialState: S | (() => S)): [S, (state: S) => void] => {
 				const [s, setState] = useState(() => {
-					if(node.state === undefined) {
+					if (node.state === undefined) {
 						node.state = initialState;
 					}
 					console.log(node.state, id);
 					return node.state;
 				});
 				return [s, (newState) => {
-					node.state = newState;
-					setState(newState);
+					return setState((s: S) => {
+						if (typeof newState === "function") {
+							node.state = newState(s);
+						} else {
+							node.state = newState;
+						}
+						return node.state;
+					});
 				}];
 			};
 		},
@@ -250,7 +256,7 @@ export type WmContext = {
 	readonly startDrag: (id: number) => void;
 	readonly stopDrag: (id: number, position: "left" | "right" | "top" | "bottom") => void;
 	readonly close: (id: number) => void;
-	readonly useState: (id: number) => <S>(initialState: S | (() => S)) => [S, (state: S) => void];
+	readonly useState: (id: number) => <S>(initialState: S | (() => S)) => [S, React.Dispatch<React.SetStateAction<S>>];
 	readonly draggingId: number | null;
 	readonly componentCount: () => number;
 };

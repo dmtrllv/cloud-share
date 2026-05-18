@@ -104,13 +104,13 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 				const parentPath = currentPath === "/" ? "" : currentPath;
 				const f = state.entries.find(u => u.path === `${parentPath}/${e.newDirName}`);
 				if (!f) {
-					setState({
+					setState((state) => ({
 						...state,
 						entries: [
 							...state.entries,
 							{ isFile: false, path: `${currentPath}/${e.newDirName}` }
 						]
-					});
+					}));
 				}
 			}
 		};
