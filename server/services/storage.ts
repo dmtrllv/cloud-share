@@ -63,11 +63,14 @@ export class StorageService extends Service {
 		}
 
 		await cp(absolutePath, absoluteTargetPath, { recursive: true });
-		await rm(absolutePath, { recursive: true, force: true });
-		
 		const updatedEntries = await FsEntry.update({ id: entry.id }, { parent: parent.id, path: newPath });
-		if (updatedEntries.length === 0)
-			throw new Error("? nothing updated?");
+		
+		if (updatedEntries.length === 0) {
+			console.warn("? nothing updated?");
+			return null;
+		}
+
+		await rm(absolutePath, { recursive: true, force: true });
 
 		return updatedEntries[0]!;
 	}
