@@ -38,7 +38,7 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 			setState({
 				requestingPath: null,
 				viewingPath: path,
-				entries: res.data.map(e => ({ ...e, path: new Path(e.path) }))
+				entries: res.data.map(e => ({ ...e, path: Path.join(path, e.name) }))
 			});
 		} else {
 			console.error(res.error);
@@ -118,6 +118,7 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 				const newEntryName = e.entry.basename();
 				const p = Path.join(currentPath, newEntryName);
 				const f = state.entries.find(u => p.equals(u.path));
+				console.log("on move", p, f);
 				if (!f) {
 					setState((state) => ({
 						...state,
@@ -130,7 +131,6 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 			}
 			else {
 				const parentPath = e.entry.dirname();
-
 				if (parentPath.equals(currentPath)) {
 					setState((state) => {
 						const newEntries = [...state.entries];
@@ -198,7 +198,7 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 			return;
 		}
 
-		const result = await api2.fs.move(path, currentPath);
+		const result = await api2.fs.move(path.toString(), currentPath.toString());
 
 		if (result.data) {
 			console.log("emit move", { entry: path, target: currentPath });

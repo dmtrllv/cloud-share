@@ -1,7 +1,8 @@
 import { compare, hash } from "bcrypt";
 import { User } from "../models/user.js";
 import { Service } from "./service.js";
-import { StorageService } from "./storage.js";
+import { FsService } from "./fs.js";
+//import { StorageService } from "./storage.js";
 
 export class AccountService extends Service {
 	public async createAccount(username: string, password: string): Promise<boolean | { error: string }> {
@@ -21,7 +22,7 @@ export class AccountService extends Service {
 			return { error: "Could not create account?!?!" };
 		}
 
-		await StorageService.get().initStorage(user);
+		await FsService.get().createFs(user);
 
 		return true;
 	}

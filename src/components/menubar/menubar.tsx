@@ -1,15 +1,11 @@
 import { useRef } from "react";
 import { useWindowManager } from "../wm";
 import { createMenu, item, type Menu, type MenuItem, MenuItemSep } from "./menu";
-
-import "./styles/menu-bar.scss";
 import { Storage } from "../storage";
 
-type MenubarProps = {
-	menu: Menu
-};
+import "./styles/menu-bar.scss";
 
-export const Menubar = (props: MenubarProps) => {
+export const Menubar = () => {
 	const wm = useWindowManager();
 
 	const menu = useRef<Menu>(createMenu(

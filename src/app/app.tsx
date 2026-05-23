@@ -7,6 +7,8 @@ import { Menubar } from "../components/menubar/menubar";
 import { item, createMenu } from "../components/menubar/menu";
 
 import "./styles/app.scss";
+import { AppManager } from "../contexts";
+import { AsyncContext, AsyncProvider } from "../contexts/context";
 
 export const App = () => {
 	const auth = useAuth();
@@ -23,24 +25,19 @@ const tree = layout("row", [
 	component(Storage),
 ]);
 
-const menu = createMenu(
-	item("apps", [
-		item("file explorer", () => {
-
-		})
-	]),
-);
-
 const LoadedApp = () => {
 	return (
 		<>
 			<WithAuth>
-				<WindowManagerContext tree={tree}>
-					<Menubar menu={menu} />
+				<AsyncProvider type={AppManager} resolver={() => api.apps.get()}>
+
+				</AsyncProvider>
+				{/*<WindowManagerContext tree={tree}>
+					<Menubar />
 					<StorageDragDropManager>
 						<WindowLayoutRenderer />
 					</StorageDragDropManager>
-				</WindowManagerContext>
+				</WindowManagerContext>*/}
 			</WithAuth>
 			<LoginPanel />
 		</>

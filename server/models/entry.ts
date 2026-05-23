@@ -10,7 +10,7 @@ export class FsEntry extends Model {
 	public owner!: Ref<User>;
 
 	@col("varchar(255)")
-	public path!: string;
+	public name!: string;
 
 	@ref(() => FsEntry, { nullable: true })
 	public parent!: Ref<FsEntry> | null;

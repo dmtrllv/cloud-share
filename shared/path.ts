@@ -1,12 +1,16 @@
 export class Path {
 	public static join(a: Path | string, b: Path | string) {
-		return new Path(`${a}${b}`).normalize();
+		return new Path(a).append(b.toString());
 	}
 
 	private _data: string;
 
 	public constructor(path: string | Path = "/") {
 		this._data = typeof path === "string" ? path : path._data;
+	}
+
+	public get parts(): string[] {
+		return ["/", ...this._data.split("/").filter(s => !!s)];
 	}
 
 	public get isAbsolute(): boolean {
@@ -17,11 +21,11 @@ export class Path {
 		let prefix = this.isAbsolute ? "/" : ""
 		let parts: string[] = [];
 		this._data.split("/").forEach(part => {
-			if(!part)
+			if (!part)
 				return;
-			if(part === "..") {
+			if (part === "..") {
 				parts.pop();
-			} else if(part !== ".") {
+			} else if (part !== ".") {
 				parts.push(part);
 			}
 		});
@@ -50,6 +54,14 @@ export class Path {
 	public dirname() {
 		const parts = this._data.split("/");
 		parts.pop();
-		return new Path(parts.join("/"));
+		return new Path(parts.join("/") || "/");
+	}
+
+	public append(...parts: string[]) {
+		const p = this._data.split("/")
+		p.push(...parts);
+		const str = p.join("/");
+		this._data = str;
+		return this.normalize();
 	}
 }

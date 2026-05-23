@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, type PropsWithChildren } from "react";
-import { api, api2 } from "../api";
+import { api2 } from "../api";
 
 export type AuthCtx = AuthCtxState & {
 	readonly login: (username: string, password: string) => Promise<boolean>;
