@@ -3,7 +3,7 @@
 		"dist/**/*.json",
 		"dist/**/*.js"
 	],
-	"exec": "node --trace-uncaught .",
+	"exec": "node --trace-uncaught --enable-source-maps .",
 	"ext": "js jsx json ts tsx",
 	"delay": 150
 }

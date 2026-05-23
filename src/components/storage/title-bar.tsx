@@ -1,10 +1,10 @@
-import type { Path } from "../../utils/path";
+import type { Path } from "@shared";
 
 export const Titlebar = ({ path, startDrag, closable, onClose }: TitlebarProps) => {
 	return (
 		<div className="top-bar" onMouseDown={startDrag}>
 			<div className="title">
-				File explorer - {path.value}
+				File explorer - {path.toString()}
 			</div>
 			<div className="top-buttons">
 				{closable && (

@@ -1,18 +1,33 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import react from "@vitejs/plugin-react-swc";
+import path from "path";
 
 export default defineConfig({
+	resolve: {
+		alias: {
+			"@server": path.resolve(import.meta.dirname, "server"),
+			"@shared": path.resolve(import.meta.dirname, "shared"),
+		},
+	},
 	plugins: [
 		react({
-			babel: {
-				plugins: [["babel-plugin-react-compiler"]],
-			},
+			tsDecorators: true
 		}),
 	],
 	server: {
+		cors: false,
 		proxy: {
+			"/auth": {
+				target: "http://127.0.0.1:3001",
+				changeOrigin: true,
+			},
+			"/fs": {
+				target: "http://127.0.0.1:3001",
+				changeOrigin: true,
+			},
 			"/api": {
-				target: "http://localhost:3001",
+				target: "http://127.0.0.1:3001",
+				changeOrigin: true,
 			},
 		}
 	}

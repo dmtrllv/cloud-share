@@ -1,5 +1,5 @@
 import { EventEmitter } from "../../event-emitter";
-import type { Path } from "../../utils/path";
+import type { Path } from "@shared";
 
 export const storageEvents = new EventEmitter<StorageEvents>();
 

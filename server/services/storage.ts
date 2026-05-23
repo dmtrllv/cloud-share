@@ -6,6 +6,7 @@ import { Service } from "./service.js";
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { rm, cp } from "node:fs/promises";
 import { FsEntry } from "../models/entry.js";
+import type { Path } from "../../shared/path.js";
 
 export class StorageService extends Service {
 	public absolutePath(owner: User, p: string) {
@@ -21,7 +22,12 @@ export class StorageService extends Service {
 			throw new Error(`${filePath} already exists!`);
 		}
 
-		const parent = await FsEntry.findOne({ what: ["id"], where: { path: posixPath.dirname(filePath) } });
+		const parent = await FsEntry.findOne({
+			what: ["id"],
+			where: {
+				path: posixPath.dirname(filePath)
+			}
+		});
 
 		if (!parent) {
 			throw new Error(`Could not get parent entry for ${filePath}!`);
@@ -48,8 +54,31 @@ export class StorageService extends Service {
 		}
 	}
 
-	public async getEntry(owner: User, entryPath: string): Promise<FsEntry | null> {
-		return FsEntry.findOne({ where: { path: posixPath.normalize(entryPath), owner: owner.id }, include: true });
+	public async getEntry(owner: User, entryPath: Path): Promise<FsEntry | null> {
+		return FsEntry.findOne({ where: { path: entryPath.normalize().toString(), owner: owner.id }, include: true });
+	}
+
+	public async readDir(owner: User, entryPath: Path): Promise<FsEntry[]> {
+		const entry = await FsEntry.findOne({
+			where: {
+				owner,
+				path: entryPath.normalize().toString(),
+			},
+			include: true
+		});
+
+		if (!entry)
+			return [];
+
+		const children = await FsEntry.find({
+			where: {
+				owner,
+				parent: entry,
+			},
+			include: true
+		});
+
+		return children;
 	}
 
 	// TODO: handle recursive creation (fs and database)
@@ -78,7 +107,7 @@ export class StorageService extends Service {
 		const absoluteTargetPath = path.resolve(this.storageRoot, owner.id.toString(), "./" + targetPath, path.basename(entryPath));
 		const newPath = posixPath.normalize(targetPath + "/" + path.basename(entryPath));
 		const parent = await FsEntry.findOne({ where: { path: targetPath }, what: "id" });
-		console.log({entryPath});
+		console.log({ entryPath });
 		const entry = await FsEntry.findOne({ where: { path: entryPath }, what: "id" });
 
 		if (!parent) {

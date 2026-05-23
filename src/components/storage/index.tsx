@@ -1,25 +1,25 @@
 import { useEffect, useRef, useState } from "react"
-import { api } from "../../api";
+import { api2 } from "../../api";
 import { PathBar } from "./path-bar";
 import { storageEvents, type MakeDirEvent, type MoveEvent, type UploadEvent } from "./events";
 import { useWindowContext } from "../wm";
 import { Titlebar } from "./title-bar";
 import { EntryView } from "./list-entry";
 import { useStorageDragDropContext } from "./drag-drop";
-import { type Path, path as createPath } from "../../utils/path";
+import { parseError } from "../error";
+import { Path } from "@shared";
 
 import "./styles/storage.scss";
-import { hasData } from "../../../shared/api";
 
 export const Storage = ({ path = "/" }: { path?: string }) => {
 	const windowContext = useWindowContext();
 	const dragDropContext = useStorageDragDropContext();
 
 	const reqId = useRef(0);
-	const [state, setState] = windowContext.useState<StorageState>({ requestingPath: createPath(path), viewingPath: null, entries: [] });
+	const [state, setState] = windowContext.useState<StorageState>({ requestingPath: new Path(path), viewingPath: null, entries: [] });
 	const [addFolderState, setAddFolderState] = useState<AddFolderState>({ show: false, name: "" });
 
-	const currentPath = state.requestingPath || state.viewingPath || createPath("/");
+	const currentPath = state.requestingPath || state.viewingPath || new Path("/");
 
 	const nextId = () => {
 		reqId.current += 1;
@@ -28,40 +28,37 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 
 	const addFolderInputRef = useRef<HTMLInputElement>(null);
 
-	const openPath = (path: Path) => {
+	const openPath = async (path: Path) => {
 		const id = nextId();
-		api.get<{ children: Entry[] }>(`/fs/ls/${path}`).then((res) => {
-			if (id !== reqId.current)
-				return;
+		const res = await api2.fs.readDir(path.toString());
+		if (id !== reqId.current)
+			return;
 
-			if (res.data) {
-				setState({
-					requestingPath: null,
-					viewingPath: path,
-					entries: res.data.children.map(s => s)
-				});
-			} else {
-				console.error(res.error);
-				setState({
-					error: res.error,
-					entries: []
-				});
-			}
-		});
+		if (res.data) {
+			setState({
+				requestingPath: null,
+				viewingPath: path,
+				entries: res.data.map(e => ({ ...e, path: new Path(e.path) }))
+			});
+		} else {
+			console.error(res.error);
+			setState({
+				error: res.error,
+				entries: []
+			});
+		}
 	};
 
 	const addFolder = async () => {
 		const name = addFolderState.name;
 		if (!state.error && name && state.viewingPath) {
-			const parentPath = currentPath.value === "/" ? "" : currentPath;
-			api.post<Entry>(`/fs/mkdir${parentPath}/${name}`).then(({ data, error }) => {
-				if (data) {
-					setAddFolderState({ show: false, name: "" });
-					storageEvents.emit("mkdir", { parentPath: currentPath, newDirName: name });
-				} else {
-					setAddFolderState({ ...addFolderState, error });
-				}
-			});
+			const { data, error } = await api2.fs.mkDir(Path.join(currentPath, name).toString());
+			if (data) {
+				setAddFolderState({ show: false, name: "" });
+				storageEvents.emit("mkdir", { parentPath: currentPath, newDirName: name });
+			} else {
+				setAddFolderState({ ...addFolderState, error: typeof error === "string" ? error : error?.message });
+			}
 		}
 	};
 
@@ -101,15 +98,15 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 
 	useEffect(() => {
 		const onMakeDir = (e: MakeDirEvent) => {
-			if (e.parentPath.value === currentPath.value) {
-				const parentPath = currentPath.value === "/" ? "" : currentPath;
-				const f = state.entries.find(u => u.path === `${parentPath}/${e.newDirName}`);
+			if (e.parentPath.equals(currentPath)) {
+				const p = Path.join(currentPath, e.newDirName);
+				const f = state.entries.find(u => p.equals(u.path));
 				if (!f) {
 					setState((state) => ({
 						...state,
 						entries: [
 							...state.entries,
-							{ isFile: false, path: `${parentPath}/${e.newDirName}` }
+							{ isFile: false, path: p }
 						]
 					}));
 				}
@@ -119,14 +116,14 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 		const onMove = (e: MoveEvent) => {
 			if (e.target.equals(currentPath)) {
 				const newEntryName = e.entry.basename();
-				const parentPath = currentPath.value === "/" ? "" : currentPath.value;
-				const f = state.entries.find(u => u.path === `${parentPath}/${newEntryName}`);
+				const p = Path.join(currentPath, newEntryName);
+				const f = state.entries.find(u => p.equals(u.path));
 				if (!f) {
 					setState((state) => ({
 						...state,
 						entries: [
 							...state.entries,
-							{ isFile: false, path: `${parentPath}/${newEntryName}` }
+							{ isFile: false, path: p }
 						]
 					}));
 				}
@@ -151,15 +148,15 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 		};
 
 		const onUpload = (e: UploadEvent) => {
-			if (e.target.value === currentPath.value) {
-				const parentPath = currentPath.value === "/" ? "" : currentPath;
-				const f = state.entries.find(u => u.path === `${parentPath}/${e.name}`);
+			if (e.target.equals(currentPath)) {
+				const p = Path.join(currentPath, e.name);
+				const f = state.entries.find(u => p.equals(u.path));
 				if (!f) {
 					setState((state) => ({
 						...state,
 						entries: [
 							...state.entries,
-							{ isFile: true, path: `${parentPath}/${e.name}` }
+							{ isFile: true, path: p }
 						]
 					}));
 				}
@@ -182,7 +179,7 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 		}
 	};
 
-	const onMouseUp = () => {
+	const onMouseUp = async () => {
 		if (!dragDropContext.dragState)
 			return;
 
@@ -201,17 +198,17 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 			return;
 		}
 
-		api.post<boolean>(`/fs/move${path}`, { target: currentPath.value }).then((result) => {
-			if (hasData(result)) {
-				console.log("emit move", { entry: path, target: currentPath });
-				storageEvents.emit("move", { entry: path, target: currentPath });
-			} else {
-				console.error(result.error);
-			}
-		});
+		const result = await api2.fs.move(path, currentPath);
+
+		if (result.data) {
+			console.log("emit move", { entry: path, target: currentPath });
+			storageEvents.emit("move", { entry: path, target: currentPath });
+		} else {
+			console.error(result.error);
+		}
 	};
 
-	const vp = state.viewingPath || createPath("/");
+	const vp = state.viewingPath || new Path("/");
 
 	const onDrop = async (e: React.DragEvent<HTMLDivElement>) => {
 		e.preventDefault();
@@ -219,17 +216,12 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 		const file = e.dataTransfer?.files?.[0];
 		if (!file)
 			return;
+		const path = Path.join(currentPath, file.name);
+		const res = await api2.fs.writeFile(path.toString(), file as any);
 
-		await api.post(`/fs/upload${currentPath}`, file, {
-			headers: {
-				"Content-Type": "application/octet-stream",
-				"X-Filename": encodeURIComponent(file.name),
-			}
-		}).then((res) => {
-			if (res.data) {
-				storageEvents.emit("upload", { name: file.name, target: currentPath });
-			}
-		});
+		if (res.data) {
+			storageEvents.emit("upload", { name: file.name, target: currentPath });
+		}
 	};
 
 	return (
@@ -239,8 +231,8 @@ export const Storage = ({ path = "/" }: { path?: string }) => {
 				<PathBar openPath={openPath} path={vp} onNewFolder={onNewFolder} />
 				<div className="entries">
 					{state.entries.length === 0 ? <div>Nothing here yet!</div> : null}
-					{state.entries.map(e => <EntryView key={e.path} windowId={windowContext.id} openPath={openPath} path={createPath(e.path)} isFile={e.isFile} />)}
-					{state.error && <h1>Error: {state.error}</h1>}
+					{state.entries.map(e => <EntryView key={e.path.toString()} windowId={windowContext.id} openPath={openPath} path={new Path(e.path)} isFile={e.isFile} />)}
+					{state.error && <h1>Error: {parseError(state.error)}</h1>}
 				</div>
 				<form onSubmit={onNewFolderSubmit} className={`add-folder-panel ${addFolderState.show ? "show" : ""}`} onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
 					<input ref={addFolderInputRef} type="text" placeholder="folder name" value={addFolderState.name} onChange={e => setAddFolderState({ ...addFolderState, name: e.target.value })} />
@@ -259,7 +251,7 @@ type AddFolderState = {
 };
 
 type Entry = {
-	path: string;
+	path: Path;
 	isFile: boolean;
 }
 

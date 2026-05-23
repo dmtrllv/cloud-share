@@ -7,13 +7,13 @@
 	box-shadow: var(--shadow-2);
 
 	.part {
-		cursor: pointer;
 		display: inline-block;
 		padding: 4px 12px;
 		position: relative;
 		color: rgb(218, 218, 218);
 
 		&.hover {
+			cursor: pointer;
 			background-color: var(--bg-2);
 			color: rgb(255, 255, 255);
 			&:not(.hover ~ .hover) {

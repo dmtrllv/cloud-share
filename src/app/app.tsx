@@ -4,9 +4,9 @@ import { LoginPanel } from "../auth";
 import { component, layout, WindowLayoutRenderer, WindowManagerContext } from "../components/wm";
 import { StorageDragDropManager } from "../components/storage/drag-drop";
 import { Menubar } from "../components/menubar/menubar";
+import { item, createMenu } from "../components/menubar/menu";
 
 import "./styles/app.scss";
-import { item, createMenu } from "../components/menubar/menu";
 
 export const App = () => {
 	const auth = useAuth();
@@ -21,10 +21,9 @@ export const App = () => {
 
 const tree = layout("row", [
 	component(Storage),
-	component(Storage),
 ]);
 
-const menuItems = createMenu(
+const menu = createMenu(
 	item("apps", [
 		item("file explorer", () => {
 
@@ -37,7 +36,7 @@ const LoadedApp = () => {
 		<>
 			<WithAuth>
 				<WindowManagerContext tree={tree}>
-					<Menubar />
+					<Menubar menu={menu} />
 					<StorageDragDropManager>
 						<WindowLayoutRenderer />
 					</StorageDragDropManager>

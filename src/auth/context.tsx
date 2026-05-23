@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, type PropsWithChildren } from "react";
-import { api } from "../api";
+import { api, api2 } from "../api";
 
 export type AuthCtx = AuthCtxState & {
 	readonly login: (username: string, password: string) => Promise<boolean>;
@@ -28,7 +28,7 @@ export const useAuth = (): AuthCtx => {
 
 
 const initAuthState = async (): Promise<AuthCtxState> => {
-	const response = await api.get<{ username: string }>("/auth/login");
+	const response = await api2.auth.getSession();
 
 	if (response.data) {
 		return { isAuthenticated: true, username: response.data.username, isLoading: false };
@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 	setState.current = setCtx;
 
 	const login = async (username: string, password: string) => {
-		const response = await api.post<boolean>("/auth/login", { username, password });
+		const response = await api2.auth.login({ username, password });
 		if (response.data) {
 			setState.current({ isAuthenticated: true, username, isLoading: false });
 			return true;
@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 	};
 
 	const register = async (username: string, password: string) => {
-		const response = await api.post<boolean>("/auth/register", { username, password });
+		const response = api2.auth.register({ username, password });
 		if (response.data) {
 			setState.current({ isAuthenticated: true, username, isLoading: false });
 			return true;
@@ -64,7 +64,9 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 	};
 
 	const logout = async () => {
-		api.post("/auth/logout");
+		if(!await api2.auth.logout()) {
+			console.error("Could not successfully logout!");
+		}
 		setState.current({ isAuthenticated: false, isLoading: false });
 	};
 

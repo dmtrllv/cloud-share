@@ -1,11 +1,15 @@
 import { useRef } from "react";
 import { useWindowManager } from "../wm";
-import { item, createMenu, type Menu, type MenuItem, MenuItemSep } from "./menu";
-import { Storage } from "../storage";
+import { createMenu, item, type Menu, type MenuItem, MenuItemSep } from "./menu";
 
 import "./styles/menu-bar.scss";
+import { Storage } from "../storage";
 
-export const Menubar = () => {
+type MenubarProps = {
+	menu: Menu
+};
+
+export const Menubar = (props: MenubarProps) => {
 	const wm = useWindowManager();
 
 	const menu = useRef<Menu>(createMenu(
@@ -28,7 +32,7 @@ const MenubarItem = ({ text, action, children }: MenuItem) => {
 			{children && children.length > 0 ? (
 				<div className="children">
 					{children.map((item, i) => {
-						if(item === MenuItemSep) {
+						if (item === MenuItemSep) {
 							return <div className="sep" />;
 						} else {
 							return <MenubarItem key={i} {...item} />;

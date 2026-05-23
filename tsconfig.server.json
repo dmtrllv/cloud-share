@@ -18,7 +18,9 @@
 		"moduleDetection": "force",
 		"noEmit": false,
 		"moduleResolution": "nodenext",
-		"experimentalDecorators": true
+		"experimentalDecorators": true,
+		"inlineSourceMap": true,
+		"emitDecoratorMetadata": true
 	},
 	"include": [
 		"server",

@@ -102,7 +102,7 @@ export abstract class Model {
 		return what.toString();
 	}
 
-	public static async find<T extends typeof Model>(this: T, query: FindQuery<InstanceType<T>> = {}): Promise<FindResult<InstanceType<T>, typeof query>[]> {
+	public static async find<T extends typeof Model, Q extends FindQuery<InstanceType<T>>>(this: T, query: Q): Promise<FindResult<InstanceType<T>, Q>[]> {
 		const tableName = this.getTableName();
 		const values: any[] = [];
 

@@ -8,6 +8,17 @@
 			"DOM",
 			"DOM.Iterable"
 		],
+		"paths": {
+			"@shared": [
+				"./shared/index.ts"
+			],
+			"@shared/*": [
+				"./shared/*"
+			],
+			"@server/*": [
+				"./server/*"
+			]
+		},
 		"module": "ESNext",
 		"types": [
 			"vite/client"
@@ -19,7 +30,8 @@
 		"moduleDetection": "force",
 		"noEmit": true,
 		"jsx": "react-jsx",
-		"experimentalDecorators": true
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true
 	},
 	"include": [
 		"src",

@@ -26,11 +26,11 @@ export class AccountService extends Service {
 		return true;
 	}
 
-	public async login(username: string, password: string): Promise<boolean> {
+	public async login(username: string, password: string): Promise<User | null> {
 		const user = await User.findOne({ where: { username } });
-		if(user) {
-			return await compare(password, user.password);
+		if(user && await compare(password, user.password)) {
+			return user;
 		}
-		return false;
+		return null;
 	}
 }

@@ -5,6 +5,7 @@ import { StorageService } from "../services/storage.js";
 import { FsEntry } from "../models/entry.js";
 
 import { createWriteStream } from "fs";
+import { Path } from "../../shared/path.js";
 
 export const fs = Router({ strict: true });
 
@@ -15,7 +16,7 @@ fs.get("/ls/{*splat}", isAuthenticated, async (req, res) => {
 	if (!owner)
 		return res.json({ error: "Could not get user info!" });
 
-	const entry = await StorageService.get().getEntry(owner, path);
+	const entry = await StorageService.get().getEntry(owner, new Path(path));
 
 	if (!entry) {
 		return res.json({ error: "Could not find entry!" });
