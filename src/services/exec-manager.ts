@@ -1,9 +1,9 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
 import { api } from "../api.js";
 import { Auth, type LoginEvent } from "./auth.js";
 import { Executable, type ExecMeta } from "../executables/executable.js";
 import { onEvent, Service } from "../framework/service.js";
+import { runtime } from "../sdk/runtime.js";
+
 
 type ExecutableManagerEvents = {
 	readonly change: { readonly executables: ReadonlyArray<ExecMeta<any>> };
@@ -31,19 +31,32 @@ export class ExecutableManager extends Service<ExecutableManagerEvents> {
 	}
 
 	public override async onConfigure(): Promise<void> {
-		const runtime = {
-			import: (url: string) => import(/* @vite-ignore */ url),
-			process: {
-				env: {
-					NODE_ENV: "development"
-				}
-			},
-			React,
-			ReactDOM
-		};
-		Object.assign(window, runtime);
-		Object.assign(globalThis, runtime);
-		await (window as any).import("cloud-share");
+		// setup the runtime with service
+		// generate import map?
+
+		const modulesUris: Record<string, string> = {};
+
+		for (const name in runtime.modules) {
+			const code: string[] = [];
+			const keys = Object.keys(runtime.modules[name] || {});
+			for (const k of keys!) {
+				if (k === "default")
+					code.push(`const __${k} = globalThis.runtime.getModule("${name}")["${k}"];`, `export default __${k};`);
+				else
+					code.push(`export const ${k} = globalThis.runtime.getModule("${name}")["${k}"];`);
+			}
+
+			const dataUri = "data:text/javascript;charset=utf-8," + encodeURIComponent(code.join("\n"));
+			await import(/* @vite-ignore */ dataUri);
+			modulesUris[name] = dataUri;
+		}
+
+		const importmap = document.createElement("script");
+		importmap.type = "importmap";
+		importmap.textContent = JSON.stringify({
+			imports: modulesUris
+		});
+		document.head.appendChild(importmap);
 	}
 
 	protected async setExecutables(executables: ReadonlyArray<ExecMeta<any>>): Promise<ReadonlyArray<ExecMeta<any>>> {
@@ -72,7 +85,7 @@ export class ExecutableManager extends Service<ExecutableManagerEvents> {
 				return null;
 			}
 
-			const dataUri = 'data:text/javascript;charset=utf-8,' + encodeURIComponent(data!);
+			const dataUri = "data:text/javascript;charset=utf-8," + encodeURIComponent(data!);
 			const module = await import(/* @vite-ignore */ dataUri);
 			if (!("default" in module)) {
 				console.warn("no default export!");

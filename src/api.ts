@@ -1,5 +1,5 @@
-import type { Api, ClientApi } from "../server/framework/http";
-import type { Api as ServerApi } from "../server/controllers/api";
+import type { Api, ClientApi } from "../server/framework/http.js";
+import type { Api as ServerApi } from "../server/controllers/api.js";
 
 type ApiRoutes = {
 	readonly [key: string]: ApiRoutes | [method: string, path: string];

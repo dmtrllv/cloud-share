@@ -1,4 +1,4 @@
-import { Executable } from "../framework";
+import { Executable } from "./executable.js";
 
 @Executable.default("File Explorer")
 export class FileExplorer extends Executable {

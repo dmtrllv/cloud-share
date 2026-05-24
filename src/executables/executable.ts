@@ -1,5 +1,5 @@
 import { Counter } from "../../shared/index.js";
-import { sdk } from "../sdk/sdk.js";
+import { runtime } from "../sdk/runtime.js";
 import type React from "react";
 
 const DEFAULT_OPTIONS: ExecutableOptions = {};
@@ -11,7 +11,7 @@ export type ExecMeta<T extends Executable> = {
 	readonly isDefault: boolean;
 };
 
-@sdk.expose
+@runtime.export("Executable")
 export abstract class Executable {
 	private static readonly _defaultExecutables: ExecMeta<any>[] = [];
 

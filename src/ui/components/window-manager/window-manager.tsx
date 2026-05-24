@@ -1,3 +1,4 @@
+import { api } from "../../../api.js";
 import { ExecutableManager } from "../../../services/exec-manager.js";
 import { WindowContextProvider } from "./context.js";
 import { useInstances } from "./hooks.js";
@@ -9,7 +10,7 @@ export const WindowManager = () => {
 
 	return (
 		<div>
-			WindowManager
+			<h1 onClick={() => api.fs.writeFile("/test", new TextEncoder().encode(""))}>WindowManager</h1>
 			<button onClick={() => mngr.load("Test App")}>Open Test App</button>
 			{instances.map((exec) => {
 				const Component = exec.render.bind(exec);

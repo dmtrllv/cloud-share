@@ -1,4 +1,4 @@
-import { id, Model, ref, table, type ID, type Ref } from "../db/index.js";
+import { col, id, Model, ref, table, type ID, type Ref } from "../db/index.js";
 import { User } from "./user.js";
 import { FsEntry } from "./entry.js";
 
@@ -12,4 +12,7 @@ export class Executable extends Model {
 
 	@ref(() => FsEntry)
 	public fsEntry!: Ref<FsEntry>;
+
+	@col("boolean", { default: false })
+	public isPublic!: boolean;
 }

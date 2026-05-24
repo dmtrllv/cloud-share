@@ -1,6 +1,8 @@
 import { Controller, data, get, js } from "../framework/index.js";
 
 const TEST_APP_CODE = `
+
+
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __decorateClass = (decorators, target, key, kind) => {
@@ -12,29 +14,31 @@ var __decorateClass = (decorators, target, key, kind) => {
   return result;
 };
 
-// src/app.tsx
-import sdk from "cloud-share";
-var TestApp = class extends sdk.Executable {
+// src/index.tsx
+import { Executable } from "cloud-share";
+import React, { useState } from "react";
+var TestApp = class extends Executable {
   render() {
-    const window = sdk.useWindow();
-    return /* @__PURE__ */ globalThis.React.createElement("div", { className: "test-app" }, "TestApp ", /* @__PURE__ */ globalThis.React.createElement("button", { onClick: window.close }, "close"));
+    const [state, setState] = useState(1);
+    const inc = () => setState(state + 1);
+    return /* @__PURE__ */ React.createElement("div", { onClick: inc }, state);
   }
 };
 TestApp = __decorateClass([
-  sdk.Executable.register("Test App")
+  Executable.register("Test App 2")
 ], TestApp);
-
-// src/index.ts
-var index_default = TestApp;
 export {
-  index_default as default
+  TestApp as default
 };
+
+
 
 `;
 
 export class Executables extends Controller {
-	@get("/executables/cloud-share-sdk")
-	public sdk() {
+	@get("/executables/runtime")
+	public runtime(@data(String) module: string) {
+		console.log("got module", module);
 		return js("export default new Proxy({}, { get: (_, p) => window[p] });");
 	}
 
@@ -43,3 +47,12 @@ export class Executables extends Controller {
 		return TEST_APP_CODE;
 	}
 }
+
+const x = {
+	test: 1,
+	test2: 2,
+};
+
+export {
+	x
+};

@@ -65,7 +65,7 @@ export abstract class Model {
 
 
 	// TODO: Check if the referenced table has a primary ID<T>
-	public static readonly ref = <T extends Model, K extends keyof T>(refType: () => ColumnRefType<T, K>, options: ColumnOptions = {}) => (Class: T, key: K) => {
+	public static readonly ref = <T extends Model, K extends keyof T>(refType: () => ColumnRefType<T, K>, options: ColumnOptions<T, K> = {}) => (Class: T, key: K) => {
 		const type: typeof Model = Class.constructor as any;
 		type.setColumn(key, {
 			primaryKey: false,
@@ -77,7 +77,7 @@ export abstract class Model {
 	};
 
 	// TODO: Check for nullable type and force the dev to set the `options.nullable: true` it the type is nullable
-	public static readonly col = <T extends Model, K extends keyof T>(typeName: ColumnTypeOf<T[K]>, options: ColumnOptions = {}) => (Class: T, key: K) => {
+	public static readonly col = <T extends Model, K extends keyof T>(typeName: ColumnTypeOf<T[K]>, options: ColumnOptions<T, K> = {}) => (Class: T, key: K) => {
 		const type: typeof Model = Class.constructor as any;
 		type.setColumn(key, {
 			primaryKey: false,
@@ -87,8 +87,6 @@ export abstract class Model {
 			...options
 		});
 	};
-
-
 
 	public static id<T extends typeof Model>(this: T, id: number): ID<InstanceType<T>> {
 		return id as ID<InstanceType<T>>;
@@ -353,14 +351,10 @@ type ExcludedKeys<T extends Model, Q extends FindQuery<T>> = ExcludedColumnKeys<
 
 export type FindResult<T extends Model, Q extends FindQuery<T>> = Omit<T, ExcludedKeys<T, Q>>;
 
-export type ColumnOptions = {
+export type ColumnOptions<T extends Model, K extends keyof T> = {
 	unique?: boolean;
 	nullable?: boolean;
-};
-
-export type ColumnOptionsOf<T extends Model, _K extends keyof T> = {
-	unique?: boolean;
-	nullable?: boolean;
+	default?: T[K];
 };
 
 export type ColumnTypeOf<T> =

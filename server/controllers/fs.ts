@@ -19,7 +19,8 @@ export class Fs extends Controller {
 	}
 
 	@post("/fs/file")
-	public writeFile(@data(String) path: string, buffer: Buffer): Promise<boolean> {
+	public writeFile(@data(String) path: string, buffer: Uint8Array<ArrayBuffer>): Promise<boolean> {
+		console.log("write file", path, buffer);
 		throw new Error("TODO");
 	}
 
