@@ -5,7 +5,7 @@ type ApiRoutes = {
 	readonly [key: string]: ApiRoutes | [method: string, path: string];
 };
 
-const createApiHandler2 = (host: string, method: string, path: string) => (...args: any[]) => {
+const createApiHandler = (host: string, method: string, path: string) => (...args: any[]) => {
 	console.log("fetch", method, host, path, ...args);
 	const body = method === "GET" ? null : JSON.stringify(args);
 	return fetch(`${host}${path}${method === "GET" ? `?${new URLSearchParams(...args)}` : ""}`, {
@@ -32,7 +32,7 @@ const createApiObj = (routes: ApiRoutes, host: string): any => {
 	for (const name in routes) {
 		const val = routes[name]!;
 		if (Array.isArray(val)) {
-			api[name] = createApiHandler2(host, ...val);
+			api[name] = createApiHandler(host, ...val);
 		} else {
 			api[name] = createApiObj(val, host);
 		}
@@ -40,7 +40,7 @@ const createApiObj = (routes: ApiRoutes, host: string): any => {
 	return api;
 }
 
-export const createApi = async <T extends Api<any>>(path: string, host: string = ""): Promise<ClientApi<T>> => {
+const createApi = async <T extends Api<any>>(path: string, host: string = ""): Promise<ClientApi<T>> => {
 	const result = await fetch(`${host}${path}`).then(res => res.json());
 	if ("data" in result) {
 		return createApiObj(result.data, host);
@@ -50,4 +50,4 @@ export const createApi = async <T extends Api<any>>(path: string, host: string =
 };
 
 
-export const api2 = await createApi<ServerApi>("/api");
+export const api = await createApi<ServerApi>("/api");

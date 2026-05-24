@@ -7,8 +7,8 @@ import { Database } from "./db/db.js";
 import { AccountService } from "./services/account.js";
 import { env, isDev } from "./env.js";
 import { Cli } from "./cli/cli.js";
-import { getHttpHandlers, HttpTransport, type HttpHandler, type HttpMethod } from "./framework/http.js";
-import { getControllerArgTypes, Html } from "./framework/controller.js";
+import { getHttpHandlers, Html, HttpTransport, Js, type HttpHandler, type HttpMethod } from "./framework/http.js";
+import { getControllerArgTypes } from "./framework/controller.js";
 import { getContextsFrom } from "./framework/context.js";
 
 import "./controllers/index.js";
@@ -108,6 +108,9 @@ const initHandler = ({ target, key }: HttpHandler<any>) => async (req: Request, 
 		res.status(200);
 
 		if (result instanceof Html) {
+			return res.end(result.data);
+		} else if(result instanceof Js) {
+			res.setHeader("Content-Type", "application/javascript");
 			return res.end(result.data);
 		} else {
 			return res.json({ data: result });

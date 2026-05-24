@@ -72,7 +72,3 @@ export class Response<T> {
 		this.data = data;
 	}
 }
-
-export class Html extends Response<string> { }
-
-export const html = (html: string) => new Html(html);

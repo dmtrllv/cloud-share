@@ -3,11 +3,13 @@ import { createApi, get } from "../framework/http.js";
 import { Auth } from "./auth.js";
 import { Users } from "./users.js";
 import { Fs } from "./fs.js";
+import { Executables } from "./executables.js";
 
 const api = createApi({
 	Users,
 	Auth,
-	Fs
+	Fs,
+	Executables
 });
 
 export type Api = typeof api;

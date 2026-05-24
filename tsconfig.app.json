@@ -28,14 +28,18 @@
 		"allowImportingTsExtensions": false,
 		"verbatimModuleSyntax": true,
 		"moduleDetection": "force",
-		"noEmit": true,
+		"noEmit": false,
+		"emitDeclarationOnly": true,
 		"jsx": "react-jsx",
 		"experimentalDecorators": true,
-		"emitDecoratorMetadata": true
+		"emitDecoratorMetadata": true,
+		"declaration": true,
+		"declarationDir": "types"
 	},
 	"include": [
 		"src",
-		"shared"
-	],
+		"shared",
+		"server"
+, "types/index.d.ts"	],
 	"extends": "@tsconfig/strictest/tsconfig.json"
 }

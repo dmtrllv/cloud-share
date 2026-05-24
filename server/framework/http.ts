@@ -1,5 +1,5 @@
 import { type Request } from "express";
-import type { Controller, ControllerMap, ControllerType } from "./controller.js";
+import { Response, type Controller, type ControllerMap, type ControllerType } from "./controller.js";
 import { Transport } from "./transport.js";
 
 const handlers = new Map<string, HttpHandlers>;
@@ -136,3 +136,9 @@ export type ClientApi<T extends Api<any>> = T extends Api<infer U> ? ClientApiMa
 export class HttpTransport extends Transport<Request> {
 	
 }
+
+export class Html extends Response<string> { }
+export class Js extends Response<string> { }
+
+export const html = (html: string) => new Html(html);
+export const js = (code: string) => new Js(code);

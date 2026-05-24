@@ -1,9 +1,14 @@
-import { createRoot } from "react-dom/client";
-import { App } from "./app/app";
-import { AuthProvider } from "./auth";
+import { App } from "./framework/app";
+import { ExecutableManager } from "./services/exec-manager";
+import { Auth } from "./services/auth";
+import { AppUI } from "./ui/app";
 
-createRoot(document.getElementById("root")!).render(
-	<AuthProvider>
-		<App />
-	</AuthProvider>
-);
+export const app = new App();
+
+app.registerService(Auth);
+app.registerService(ExecutableManager);
+
+app.render(AppUI);
+
+const mod = await app.getService(ExecutableManager).load("test");
+

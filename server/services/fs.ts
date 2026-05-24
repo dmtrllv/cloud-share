@@ -20,8 +20,8 @@ export class FsService extends Service {
 	}
 
 	private initStorageRoot(): string {
-		const root = path.posix.normalize(path.resolve(process.cwd(), process.env.STORAGE_ROOT_DIR || "dist/storage"));
-		console.log("init storage root", process.cwd(), process.env.STORAGE_ROOT_DIR || "dist/storage");
+		const root = path.posix.normalize(path.resolve(process.cwd(), process.env["STORAGE_ROOT_DIR"] || "dist/storage"));
+		console.log("init storage root", process.cwd(), process.env["STORAGE_ROOT_DIR"] || "dist/storage");
 		if (!existsSync(root)) {
 			mkdirSync(root);
 		}
