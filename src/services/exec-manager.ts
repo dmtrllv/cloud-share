@@ -4,7 +4,6 @@ import { Executable, type ExecMeta } from "../executables/executable.js";
 import { onEvent, Service } from "../framework/service.js";
 import { runtime } from "../sdk/runtime.js";
 
-
 type ExecutableManagerEvents = {
 	readonly change: { readonly executables: ReadonlyArray<ExecMeta<any>> };
 	readonly start: { readonly executable: Executable };

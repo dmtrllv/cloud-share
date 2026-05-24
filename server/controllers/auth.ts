@@ -24,11 +24,8 @@ export class Auth extends Controller {
 	@post("/auth/login")
 	@command("login")
 	public async login(@data(LoginData) { username, password }: LoginData): Promise<false | SessionData> {
-		if (this.session.isLoggedIn)
-			return false;
-
 		const user = await AccountService.get().login(username, password);
-		
+
 		if (user) {
 			return await this.session.start(user.id);
 		}

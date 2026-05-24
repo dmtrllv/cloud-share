@@ -2,7 +2,6 @@ import { Controller, data, get, js } from "../framework/index.js";
 
 const TEST_APP_CODE = `
 
-
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __decorateClass = (decorators, target, key, kind) => {
@@ -15,13 +14,15 @@ var __decorateClass = (decorators, target, key, kind) => {
 };
 
 // src/index.tsx
-import { Executable } from "cloud-share";
+import { Executable, useWindow } from "cloud-share";
 import React, { useState } from "react";
 var TestApp = class extends Executable {
   render() {
+    const window = useWindow();
     const [state, setState] = useState(1);
+    const dec = () => setState(state - 1);
     const inc = () => setState(state + 1);
-    return /* @__PURE__ */ React.createElement("div", { onClick: inc }, state);
+    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("button", { onClick: dec }, "dec"), /* @__PURE__ */ React.createElement("h3", null, "count: ", state), /* @__PURE__ */ React.createElement("button", { onClick: inc }, "inc"), /* @__PURE__ */ React.createElement("button", { onClick: window.close }, "Close App"));
   }
 };
 TestApp = __decorateClass([
@@ -30,6 +31,7 @@ TestApp = __decorateClass([
 export {
   TestApp as default
 };
+
 
 
 

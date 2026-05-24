@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { ExecutableManager } from "../../../services/exec-manager";
-import type { Executable } from "../../../framework";
+import { ExecutableManager } from "../../../services/exec-manager.js";
+import type { Executable } from "../../../executables/executable.js";
 
 type WindowedExecutable = Executable & {
 	render(): React.ReactNode;

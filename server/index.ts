@@ -13,6 +13,7 @@ import { getContextsFrom } from "./framework/context.js";
 
 import "./controllers/index.js";
 import { ParseError, parseType } from "../shared/typed.js";
+import multer from "multer";
 
 const dbInit = async (db: Database) => {
 	await AccountService.get().createAccount("admin", "admin");
@@ -85,9 +86,15 @@ const initHandler = ({ target, key }: HttpHandler<any>) => async (req: Request, 
 
 		let parseErrors: ParseError[] = [];
 
-		args = args.map((arg: any, index: number) => {
+		args = await Promise.all(args.map(async (arg: any, index: number) => {
 			const argType = argTypes[index] as any;
-			if (argType === undefined || argType.type === undefined) {
+			if (Array.isArray(argType)) {
+				const [, pathInit] = argType;
+				const filePath = await pathInit(controller);
+				const x = multer({ dest: filePath }).single("file");
+				await new Promise(resolve => x(req, res, (val) => resolve(val)));
+				console.log(filePath, req.file);
+			} else if (argType === undefined || argType.type === undefined) {
 				return arg;
 			} else {
 				const result = parseType(argType.type, arg) as any;
@@ -97,19 +104,19 @@ const initHandler = ({ target, key }: HttpHandler<any>) => async (req: Request, 
 				}
 				return result.data as any;
 			}
-		});
+		}));
 
 		if (parseErrors.length) {
 			return res.json({ error: { name: "ParseError", errors: parseErrors } });
 		}
-		
+
 		const result = await controller[key](...args);
 
 		res.status(200);
 
 		if (result instanceof Html) {
 			return res.end(result.data);
-		} else if(result instanceof Js) {
+		} else if (result instanceof Js) {
 			res.setHeader("Content-Type", "application/javascript");
 			return res.end(result.data);
 		} else {

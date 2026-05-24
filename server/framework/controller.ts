@@ -1,7 +1,7 @@
 import type { Type, Validated } from "../../shared/typed.js";
 import { createValidator, type Validator } from "./validator.js";
 
-type ControllerFunctionArgs = ({ type: Type, validator: Validator<Type> } | undefined)[];
+type ControllerFunctionArgs = ({ type: Type, validator: Validator<Type> } | [typeof File, (target: any) => Promise<string>] | undefined)[];
 
 type ControllerFunctions = Record<string, ControllerFunctionArgs>;
 
@@ -49,6 +49,24 @@ export const data = <T, K extends keyof T, I extends number, T2 extends Type>(ty
 	}) as any;
 };
 
+export const file = <T, K extends keyof T, I extends number>(pathCallback: (target: T) => Promise<string>): FileDecorator<T, K, I> => {
+	return ((target: T, key: K, index: I) => {
+		const Class = (target as any).constructor
+
+		if (!controllerFunctionsMap.has(Class)) {
+			controllerFunctionsMap.set(Class, {});
+		}
+
+		const functions = controllerFunctionsMap.get(Class)!;
+		const functionName = key.toString();
+
+		if (!(functionName in functions))
+			functions[functionName] = [];
+
+		functions[functionName]![index] = [File, pathCallback];
+	}) as any;
+};
+
 export const getControllerArgTypes = (target: ControllerType<any, any>, key: string): ControllerFunctionArgs => {
 	const map = controllerFunctionsMap.get(target);
 	if (!map)
@@ -57,6 +75,14 @@ export const getControllerArgTypes = (target: ControllerType<any, any>, key: str
 }
 
 type ValidateDecoratorError<Error extends string, T> = { error: Error, type: T };
+
+type FileDecoratorError<Error extends string, T = any> = { error: Error, type: T };
+
+type FileDecorator<T, K extends keyof T, I extends number> =
+	T[K] extends (...args: infer Args) => any ?
+	File extends Args[I] ? (target: T, key: K, index: I) => any :
+	(target: T, key: K, index: I) => FileDecoratorError<"Decorated argument is not a File!", Args[I]> :
+	(target: T, key: K, index: I) => FileDecoratorError<"Decorated target is not a function parameter!">;
 
 type ValidateDecorator<T, K extends keyof T, I extends number, T2 extends Type> = T[K] extends (...args: infer Args) => any ?
 	((T2 extends Type ? Validated<T2> : (T2 extends new () => infer U ? U : never)) extends Args[I] ?

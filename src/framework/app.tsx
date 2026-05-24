@@ -1,5 +1,5 @@
 import { createRoot, type Root } from "react-dom/client"
-import { Service, type ServiceEvents, type ServiceType } from "./service";
+import { Service, type ServiceEvents, type ServiceType } from "./service.js";
 import React, { useContext } from "react";
 
 export class App {
