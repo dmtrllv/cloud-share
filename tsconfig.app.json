@@ -8,23 +8,12 @@
 			"DOM",
 			"DOM.Iterable"
 		],
-		"paths": {
-			"@shared": [
-				"./shared/index.ts"
-			],
-			"@shared/*": [
-				"./shared/*"
-			],
-			"@server/*": [
-				"./server/*"
-			]
-		},
-		"module": "ESNext",
+		"module": "nodenext",
 		"types": [
 			"vite/client"
 		],
 		"skipLibCheck": true,
-		"moduleResolution": "bundler",
+		"moduleResolution": "nodenext",
 		"allowImportingTsExtensions": false,
 		"verbatimModuleSyntax": true,
 		"moduleDetection": "force",

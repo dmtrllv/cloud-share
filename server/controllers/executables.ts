@@ -16,7 +16,8 @@ var __decorateClass = (decorators, target, key, kind) => {
 import sdk from "cloud-share";
 var TestApp = class extends sdk.Executable {
   render() {
-    return /* @__PURE__ */ window.React.createElement("div", { className: "test-app" }, "TestApp");
+    const window = sdk.useWindow();
+    return /* @__PURE__ */ globalThis.React.createElement("div", { className: "test-app" }, "TestApp ", /* @__PURE__ */ globalThis.React.createElement("button", { onClick: window.close }, "close"));
   }
 };
 TestApp = __decorateClass([

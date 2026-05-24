@@ -1,5 +1,5 @@
-import { Counter } from "@shared";
-import { sdk } from "../sdk/sdk";
+import { Counter } from "../../shared/index.js";
+import { sdk } from "../sdk/sdk.js";
 import type React from "react";
 
 const DEFAULT_OPTIONS: ExecutableOptions = {};
@@ -56,6 +56,8 @@ export abstract class Executable {
 	}
 
 	public render?(): React.ReactNode;
+
+	public close() {}
 };
 
 export type ExecutableOptions = {

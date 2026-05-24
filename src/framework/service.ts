@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { App } from "./app";
+import { App } from "./app.js";
 
 export type ServiceEvents = Record<string, {}>;
 

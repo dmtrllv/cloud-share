@@ -19,7 +19,7 @@ export class Fs extends Controller {
 	}
 
 	@post("/fs/file")
-	public writeFile(_path: string, _buffer: Buffer): Promise<boolean> {
+	public writeFile(@data(String) path: string, buffer: Buffer): Promise<boolean> {
 		throw new Error("TODO");
 	}
 

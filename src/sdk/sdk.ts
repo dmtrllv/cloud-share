@@ -1,5 +1,11 @@
 export const sdk = {
-	expose: (Class: abstract new (...args: any) => any) => {
-		Object.assign(window, { [Class.name]: Class });
+	expose: (target: any, name?: any) => {
+		if (typeof target === "function") {
+			if (!target.name && !name) {
+				throw new Error("Could not set anonymous function/class");
+			}
+			Object.assign(window, { [target.name || name]: target });
+		}
+		return target;
 	}
 } as const;

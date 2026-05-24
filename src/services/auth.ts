@@ -1,5 +1,5 @@
-import { api } from "../api";
-import { Service } from "../framework/service";
+import { api } from "../api.js";
+import { Service } from "../framework/service.js";
 
 export type AuthEvents = {
 	login: { username: string };

@@ -1,12 +1,14 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { api } from "../api";
-import { Executable, onEvent, Service, type ExecMeta } from "../framework";
-import { Auth, type LoginEvent } from "./auth";
+import { api } from "../api.js";
+import { Auth, type LoginEvent } from "./auth.js";
+import { Executable, type ExecMeta } from "../executables/executable.js";
+import { onEvent, Service } from "../framework/service.js";
 
 type ExecutableManagerEvents = {
 	readonly change: { readonly executables: ReadonlyArray<ExecMeta<any>> };
 	readonly start: { readonly executable: Executable };
+	readonly close: { readonly executable: Executable };
 };
 
 export class ExecutableManager extends Service<ExecutableManagerEvents> {
@@ -18,13 +20,19 @@ export class ExecutableManager extends Service<ExecutableManagerEvents> {
 		return this._executables;
 	}
 
+	public get flatInstances(): ReadonlyArray<Executable> {
+		const i: Executable[] = [];
+		this._instances.values().forEach(instances => i.push(...instances));
+		return i;
+	}
+
 	public get instances(): ReadonlyMap<string, ReadonlyArray<Executable>> {
 		return this._executables as any;
 	}
 
 	public override async onConfigure(): Promise<void> {
-		Object.assign(window, { 
-			import: (url: string) => import(/* @vite-ignore */ url), 
+		const runtime = {
+			import: (url: string) => import(/* @vite-ignore */ url),
 			process: {
 				env: {
 					NODE_ENV: "development"
@@ -32,7 +40,9 @@ export class ExecutableManager extends Service<ExecutableManagerEvents> {
 			},
 			React,
 			ReactDOM
-		});
+		};
+		Object.assign(window, runtime);
+		Object.assign(globalThis, runtime);
 		await (window as any).import("cloud-share");
 	}
 
@@ -107,5 +117,24 @@ export class ExecutableManager extends Service<ExecutableManagerEvents> {
 		instances.push(executable);
 		await this.emit("start", { executable });
 		return executable;
+	}
+
+	public async close(id: number) {
+		console.log("close", id)
+		const instance = this.flatInstances.find(i => i.id === id);
+		if (!instance) {
+			console.log("Could not find instance");
+			return;
+		}
+
+		const instances = this._instances.get(instance.name)!;
+		const index = instances.indexOf(instance);
+		if (index > -1) {
+			instances.splice(index, 1);
+			await instance.close();
+			await this.emit("close", { executable: instance });
+		} else {
+			console.log("Could not get index");
+		}
 	}
 }

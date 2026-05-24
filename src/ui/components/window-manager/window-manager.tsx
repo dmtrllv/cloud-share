@@ -1,41 +1,23 @@
-import React, { useState } from "react";
-import { ExecutableManager } from "../../../services/exec-manager";
-import type { Executable } from "../../../framework";
-
-type WindowedExecutable = Executable & {
-	render(): React.ReactNode;
-}
+import { ExecutableManager } from "../../../services/exec-manager.js";
+import { WindowContextProvider } from "./context.js";
+import { useInstances } from "./hooks.js";
 
 export const WindowManager = () => {
-	const manager = ExecutableManager.ctx();
+	const mngr = ExecutableManager.ctx();
 
-	const [instances, setInstances] = useState<WindowedExecutable[]>(() => {
-		const i: WindowedExecutable[] = [];
-		manager.instances.values().forEach(instances => {
-			instances.forEach(exec => {
-				if ("render" in exec) {
-					i.push(exec as WindowedExecutable);
-				}
-			});
-		});
-		return i;
-	});
-
-	manager.useEvent("start", ({ executable }) => {
-		console.log(executable);
-		if ("render" in executable) {
-			setInstances((i) => [...i, executable as any]);
-		}
-	});
-
-	console.log(instances);
+	const instances = useInstances();
 
 	return (
 		<div>
 			WindowManager
+			<button onClick={() => mngr.load("Test App")}>Open Test App</button>
 			{instances.map((exec) => {
 				const Component = exec.render.bind(exec);
-				return <Component />;
+				return (
+					<WindowContextProvider key={exec.id} id={exec.id}>
+						<Component />
+					</WindowContextProvider>
+				);
 			})}
 		</div>
 	);
